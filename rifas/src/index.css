@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+:root {
+  font-family:'Poppins',sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: white;
+  background-color: #0f0f0f;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing:border-box;
+  min-height:100vh;
+}
