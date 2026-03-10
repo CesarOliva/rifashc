@@ -1,6 +1,6 @@
 const Hero = () => {
     return (
-        <div className="w-[90%] flex gap-10 items-center my-12 flex-col md:flex-row">
+        <div className="w-[90%] max-w-300 flex gap-10 items-center my-12 flex-col md:flex-row">
             <div className="w-full md:w-1/2 flex justify-center">
                 <img className="max-w-125 w-full rounded-xl hover:scale-105 duration-300" src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db"/>
             </div>
