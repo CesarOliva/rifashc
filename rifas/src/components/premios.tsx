@@ -2,15 +2,15 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
+//   CarouselNext,
+//   CarouselPrevious,
 } from "./ui/carousel"
 
 const Premios = () => {
     return (
         <div className="flex flex-col w-[90%] max-w-300 pb-8">
             <h2 className="text-center text-3xl text-white font-semibold my-6">ALGUNOS DE NUESTROS GANADORES</h2>
-            <div className="flex flex-col md:flex-row bg-white rounded-xl p-4 md:p-8 flex items-center justify-center">
+            <div className="flex flex-col md:flex-row bg-white rounded-xl p-4 md:p-8 items-center justify-center">
                 <div className="w-full md:w-1/3 p-4">
                     <Carousel className="">
                         <CarouselContent>
