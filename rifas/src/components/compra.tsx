@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
+import { CreditCard } from "./shared-assets/credit-card/credit-card";
 
 interface Contacto {
     nombre: string;
@@ -20,12 +21,19 @@ const CompraModal = ({onClose}: {
 
     const handleFirstSubmit = (e: any) => {
         e.preventDefault();
+
+        if(selectedTickets.length <= 0){
+            setValidated(false)
+            toast.error('Selecciona uno o mas boletos')
+            return;
+        }
+
+        setValidated(true)
         setCurrentStep(2);
     };
 
     const handleSecondSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        setValidated(false);
         
         if(customerData.nombre.trim() === ''){
             toast.error('Nombre requerido')
@@ -36,11 +44,11 @@ const CompraModal = ({onClose}: {
             return;
         }
 
+        setValidated(true)
         setCurrentStep(3);
     };
 
     const handlePay = ()=>{
-        
     }
 
     const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -86,7 +94,7 @@ const CompraModal = ({onClose}: {
                         </div>
                         <div className="flex justify-end p-6">
                             <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg mr-2 cursor-pointer">Cancelar</button>
-                            <button onClick={handleFirstSubmit} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Siguiente</button>
+                            <button onClick={handleFirstSubmit} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer disabled:cursor-not-allowed">Siguiente</button>
                         </div>
                     </>
                 )}
@@ -126,10 +134,10 @@ const CompraModal = ({onClose}: {
                                     placeholder="Telefono"
                                 />
                             </div>
-                            <div className="flex justify-end p-6">
-                                <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg mr-2 cursor-pointer">Cancelar</button>
-                                <button onClick={()=> setCurrentStep(1)} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg mr-2 cursor-pointer">Anterior</button>
-                                <button onClick={handleFirstSubmit} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Siguiente</button>
+                            <div className="flex justify-end flex-wrap gap-2 py-6">
+                                <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg cursor-pointer">Cancelar</button>
+                                <button onClick={()=> setCurrentStep(1)} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg cursor-pointer">Anterior</button>
+                                <button disabled={!validated} onClick={()=> handleSecondSubmit} type='submit' className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer disabled:cursor-not-allowed">Siguiente</button>
                             </div>
                         </form>
                     </>
@@ -140,10 +148,34 @@ const CompraModal = ({onClose}: {
                             <h2 className="text-white text-2xl font-semibold">Comprar Boletos</h2>
                             <p className="text-lg text-neutral-300">Playstation 5</p>
                         </div>
+
+                        <div className="flex flex-col items-center px-6 space-y-4">
+                            <div className="flex flex-col w-full">
+                                <h2 className="block text-xl text-neutral-800 font-semibold mb-2">Resumen de compra</h2>
+                                <div className="flex">
+                                    <p className="text-md text-black font-medium">Boletos seleccionados:</p>
+                                    <div className="flex gap-1 ml-1 flex-wrap">
+                                        {selectedTickets.map((ticket) => (
+                                            <span key={ticket} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                                #{ticket}
+                                            </span>
+                                            ))}
+                                    </div>
+                                </div>
+                                <div className="flex">
+                                    <p className="text-md text-black font-medium">Precio: <span className="font-normal">$150</span></p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <CreditCard type="gray-dark" />
+                            </div>
+                            <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/+528673096867">+52 86 7309 6867</a> junto con tu nombre y boletos seleccionados</p>
+                        </div>
                         
-                        <div className="flex justify-end p-6">
-                            <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg mr-2 cursor-pointer">Cancelar</button>
-                            <button onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Comprar</button>
+                        <div className="flex justify-end flex-wrap gap-2 p-6">
+                            <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg cursor-pointer">Cancelar</button>
+                            <button onClick={()=> setCurrentStep(2)} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg cursor-pointer">Anterior</button>
+                            <button onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Listo</button>
                         </div>
                     </>
                 )}

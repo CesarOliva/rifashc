@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { cx, sortCx } from "@/lib/utils/cx";
+import { cx, sortCx } from "../../../lib/utils/cx";
 import { MastercardIcon, MastercardIconWhite, PaypassIcon } from "./icons";
 
 const styles = sortCx({
