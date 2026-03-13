@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CompraModal from "./compra";
+import { getActiveRaffle } from "../services/api";
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
+
+    const [data, setData] = useState([]);
+    
+    useEffect(()=>{
+        const fetchRaffle = async ()=> {
+            setData(await getActiveRaffle())
+        }
+
+        fetchRaffle();
+    }, [])
 
     return (
         <>
@@ -11,12 +22,13 @@ const Hero = () => {
                     <h3 className="text-white text-3xl font-semibold text-center">PRÓXIMO SORTEO</h3>
                     <p className="text-white text-lg font-normal text-center mb-4 mt-1">
                         Aún estas a tiempo para comprar tus boletos para nuestro siguiente sorteo<br/>
-                        <span className="text-white text-xl font-bold">"PLAYSTATION 5"</span>
+                        <span className="text-white text-xl font-bold">"{data.Nombre}"</span><br/>
+                        <span className="text-white text-xl font-bold">${data.PrecioBoleto}</span> por boleto
                     </p>
 
                     <div className="flex justify-center gap-4 my-4 flex-wrap">
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
-                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">20</span> días</p>
+                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{20}</span> días</p>
                         </div>
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
                             <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">12</span> hrs</p>
@@ -30,7 +42,7 @@ const Hero = () => {
                     </div>
 
                     <div className="flex max-w-60 mx-auto pt-4">
-                        <button onClick={() => setIsOpen(!isOpen)} className="bg-[#f6d061] text-lg font-semibold rounded-lg w-full text-black border-none p-3 cursor-pointer">Comprar boletos</button>
+                        <button onClick={() => setIsOpen(true)} className="bg-[#f6d061] text-lg font-semibold rounded-lg w-full text-black border-none p-3 cursor-pointer">Comprar boletos</button>
                     </div>
                 </div>
             </div>
