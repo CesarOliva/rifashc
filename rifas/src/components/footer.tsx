@@ -7,7 +7,7 @@ const Footer = () => {
                     <a target="_blank" href="https://www.facebook.com/profile.php?id=61587352149529">
                         <img className='size-10' src="/facebook.svg" alt="Facebook Rifas HC"/>
                     </a>
-                    <a target="_blank" href="http://wa.me/8673096867">
+                    <a target="_blank" href="https://wa.me/+528673096867">
                         <img className='size-10' src="/whatsapp.svg" alt="WhatsApp Rifas HC"/>
                     </a>
                 </div>

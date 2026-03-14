@@ -18,9 +18,13 @@ $rifa = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if(!$rifa){
     echo json_encode([
-        "error" => "No hay rifa activa"
+        "success" => false,
+        "message" => "No hay rifa activa"
     ]);
     exit;
 }
 
-echo json_encode($rifa);
+echo json_encode([
+    "success"=> true,
+    "data" => $rifa
+]);

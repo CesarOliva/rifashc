@@ -20,6 +20,7 @@ export const createRaffle = async () => {
     console.log(data);
 }
 
+//Get Active Raffle to show on the hero section
 export const getActiveRaffle = async () => {
     const res = await fetch(`${API_URL}/getRaffle.php`);
     return res.json();
