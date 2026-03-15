@@ -1,15 +1,35 @@
 import { useState, type FormEvent } from "react";
+import { createRaffle } from "../services/api";
 
 const FormCreate = () => {
     const [name, setName] = useState<string>('');
-    const [images, setImages] = useState<string[]>([]);
-    const [date, setDate] = useState<string>('');
+    const [image, setImage] = useState<string>('');
     const [price, setPrice] = useState<number>();
     const [amount, setAmount] = useState<number>();
+    const [selectedDate, setSelectedDate] = useState<string>('');
+    const [selectedTime, setSelectedTime] = useState<string>('');
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>)=>{
+    const today = new Date().toISOString().split('T')[0];
+
+    const handleDateChange = (e: any) => {
+        setSelectedDate(e.target.value);
+    };
+    const handleTimeChange = (e: any) => {
+        setSelectedTime(e.target.value);
+    };
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>)=>{
         e.preventDefault();
+
+        await createRaffle({
+            Nombre: name,
+            Imagen: image,
+            Fecha: selectedDate,
+            PrecioBoleto: price ? price : 0,
+            CantidadBoletos: amount ? amount : 0,
+            Activa: true,
+        });
     }
+
     return (
         <section className="w-full flex flex-col items-center justify-center my-8 px-8">
             <div className="w-full max-w-300 flex flex-col md:flex-row justify-center items-center gap-y-8">
@@ -71,16 +91,30 @@ const FormCreate = () => {
                             className='text-2xl font-semibold text-[#f6d061] placeholder:text-neutral-300 focus:outline-none w-full max-w-100 rounded-md'
                             placeholder="Cantidad Boletos"
                         />
-                        <input 
-                            type="text"
-                            id="fecha"
-                            name="fecha"
-                            value={date}
-                            onChange={(e)=>setDate(e.target.value)}
-                            className='text-lg font-semibold text-neutral-700 focus:outline-none w-full max-w-100 rounded-md'
-                            placeholder="Fecha"
-                        />
-                                
+                        <div className="flex gap-2">
+                            <div className="bg-neutral-50 rounded-lg">
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={handleDateChange}
+                                    min={today}
+                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full max-w-xs cursor-pointer
+                                    [&::-webkit-calendar-picker-indicator]:bg-neutral-50 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-lg [&::-webkit-calendar-picker-indicator]:cursor-pointer
+                                    "
+                                />
+                            </div>
+                            <div className="bg-neutral-50 rounded-lg">
+                                <input
+                                    type="time"
+                                    value={selectedTime}
+                                    onChange={handleTimeChange}
+                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full max-w-xs cursor-pointer
+                                    [&::-webkit-calendar-picker-indicator]:bg-neutral-50 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-lg [&::-webkit-calendar-picker-indicator]:cursor-pointer
+                                    "
+                                />
+                            </div>
+                        </div>
+
                         <button type="submit" className="bg-[#f6d061] hover:bg-[#f5c946] font-semibold text-black h-12 w-36 rounded-lg transition-colors duration-300">GUARDAR</button>
                     </div>
                 </form>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import CompraModal from "./compra";
 import { getActiveRaffle } from "../services/api";
+import { parseDate } from "../services/parseDate";
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -8,6 +9,13 @@ const Hero = () => {
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [time, setTime] = useState({
+        days:0,
+        hours:0,
+        minutes:0,
+        seconds:0
+    })
     
     useEffect(()=>{
         const loadRaffle = async ()=> {
@@ -28,6 +36,40 @@ const Hero = () => {
 
         loadRaffle();
     }, [])
+
+    function getCountdown(date: Date) {
+        const now = new Date().getTime()
+        const diff = date.getTime() - now
+
+        if(diff <= 0){
+            return {
+                days:0,
+                hours:0,
+                minutes:0,
+                seconds:0
+            }
+        }
+
+        const days = Math.floor(diff / (1000*60*60*24))
+        const hours = Math.floor((diff / (1000*60*60)) % 24)
+        const minutes = Math.floor((diff / (1000*60)) % 60)
+        const seconds = Math.floor((diff / 1000) % 60)
+
+        return {days,hours,minutes,seconds}
+    }
+
+    useEffect(()=>{
+        if(!raffle?.data.Fecha) return
+
+        const date = parseDate(raffle.data.Fecha)
+
+        const interval = setInterval(()=>{
+            setTime(getCountdown(date))
+        },1000)
+
+        return ()=> clearInterval(interval)
+
+    },[raffle])
 
     if(loading){
          return(
@@ -57,27 +99,27 @@ const Hero = () => {
 
     return (
         <>
-            <div id="hero" className="w-full bg-linear-to-r from-[#ff0000] to-[#ff6a00] flex flex-col items-center py-8">
+            <div id="compra" className="w-full bg-linear-to-r from-[#ff0000] to-[#ff6a00] flex flex-col items-center py-8">
                 <div className="max-w-300 pb-3 pt-3">
                     <h3 className="text-white text-3xl font-semibold text-center">PRÓXIMO SORTEO</h3>
                     <p className="text-white text-lg font-normal text-center mb-4 mt-1">
                         Aún estas a tiempo para comprar tus boletos para nuestro siguiente sorteo<br/>
-                        <span className="text-white text-xl font-bold">"{raffle.Nombre}"</span><br/>
-                        <span className="text-white text-xl font-bold">${raffle.PrecioBoleto}</span> por boleto
+                        <span className="text-white text-xl font-bold">"{raffle.data.Nombre}"</span><br/>
+                        <span className="text-white text-xl font-bold">${raffle.data.PrecioBoleto}</span> por boleto
                     </p>
 
                     <div className="flex justify-center gap-4 my-4 flex-wrap">
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
-                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{20}</span> días</p>
+                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{time.days}</span> días</p>
                         </div>
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
-                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">12</span> hrs</p>
+                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{time.hours}</span> hrs</p>
                         </div>
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
-                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">5</span> min</p>
+                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{time.minutes}</span> min</p>
                         </div>
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
-                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">37</span> seg</p>
+                            <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{time.seconds}</span> seg</p>
                         </div>
                     </div>
 

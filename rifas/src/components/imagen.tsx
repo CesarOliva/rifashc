@@ -53,13 +53,13 @@ const Imagen = () => {
     }
 
     return (
-        <div className="w-full h-[80vh] overflow-hidden bg-cover bg-center flex items-end justify-center" 
+        <div className="w-full h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
             style={{
-                backgroundImage: `url(${raffle.Imagen})`
+                backgroundImage: `url(${raffle.data.Imagen})`
             }}
         >
             <div className="flex w-60 mb-8">
-                <a href="#hero" className="bg-[#f6d061] text-lg font-semibold text-center rounded-lg w-full text-black border-none p-3">Comprar boletos</a>
+                <a href="#compra" className="bg-[#f6d061] text-lg font-semibold text-center rounded-lg w-full text-black border-none p-3">Comprar boletos</a>
             </div>
         </div>
     );

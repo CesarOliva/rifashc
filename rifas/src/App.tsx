@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router";
 import HomePage from "./pages/Home";
 import Layout from "./Layout";
 import AdminPage from "./pages/Admin";
+import NotFoundPage from "./pages/NotFound";
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <Route element={<Layout/>}>
         <Route path="/" element={<HomePage/>}/>
         <Route path='/Admin' element={<AdminPage/>}/>
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   )
