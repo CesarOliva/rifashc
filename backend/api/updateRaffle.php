@@ -1,14 +1,8 @@
 <?php
 
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json");
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST");
 
 require "../config/database.php";
 
@@ -28,28 +22,37 @@ try{
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare("
-    INSERT INTO rifas (Nombre, Imagen, Fecha, PrecioBoleto, CantidadBoletos)
-    VALUES (:Nombre, :Imagen, :Fecha, :PrecioBoleto, :CantidadBoletos)
+        UPDATE rifas
+        SET
+            Nombre = :Nombre,
+            Imagen = :Imagen,
+            Fecha = :Fecha,
+            PrecioBoleto = :PrecioBoleto,
+            CantidadBoletos = :CantidadBoletos,
+            Activa = :Activa
+        WHERE IdRifa = :IdRifa
     ");
 
     $stmt->execute([
+        ":IdRifa" => $data["IdRifa"],
         ":Nombre" => $data["Nombre"],
         ":Imagen" => $data["Imagen"],
         ":Fecha" => $data["Fecha"],
         ":PrecioBoleto" => $data["PrecioBoleto"],
-        ":CantidadBoletos" => $data["CantidadBoletos"]
+        ":CantidadBoletos" => $data["CantidadBoletos"],
+        ":Activa" => $data["Activa"],
     ]);
 
     $pdo->commit();
 
     echo json_encode([
         "success" => true,
-        "message" => "Rifa creada"
+        "message" => "Rifa actualizada."
     ]);
 } catch(PDOException $e){
     echo json_encode([
         "success" => false,
-        "message" => 'Fallo al crear la rifa'
+        "message" => 'Fallo al actualizar la rifa'
         // "message" => $e->getMessage()
     ]);
 }
