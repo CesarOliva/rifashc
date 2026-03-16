@@ -4,7 +4,7 @@ import { Toaster } from "sonner";
 const Layout = () => {
     return (
         <div className="flex flex-col items-center">
-            <div className="w-full flex flex-col items-center justify-center mb-8">
+            <div className="w-full flex flex-col items-center justify-center">
                 <Outlet/>
                 <Toaster position='bottom-center'/>
             </div>

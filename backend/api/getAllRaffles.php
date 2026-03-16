@@ -11,17 +11,15 @@ try {
     $stmt = $pdo->query("
         SELECT *
         FROM rifas
-        WHERE Activa = true
         ORDER BY IdRifa DESC
-        LIMIT 1
     ");
 
-    $rifas = $stmt->fetch(PDO::FETCH_ASSOC);
+    $rifas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if(!$rifas){
         echo json_encode([
             "success" => false,
-            "message" => "No hay rifa activa"
+            "message" => "No hay rifas registradas"
         ]);
         exit;
     }

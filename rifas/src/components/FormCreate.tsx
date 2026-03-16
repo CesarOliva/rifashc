@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createRaffle } from "../services/api";
+import ImageSelect from "./ImageSelect";
 
 const FormCreate = () => {
     const [name, setName] = useState<string>('');
@@ -20,10 +21,12 @@ const FormCreate = () => {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>)=>{
         e.preventDefault();
 
+        const formatedDate = selectedDate.replaceAll('-', '') + ' ' + selectedTime+':00'
+
         await createRaffle({
             Nombre: name,
             Imagen: image,
-            Fecha: selectedDate,
+            Fecha: formatedDate,
             PrecioBoleto: price ? price : 0,
             CantidadBoletos: amount ? amount : 0,
             Activa: true,
@@ -31,36 +34,11 @@ const FormCreate = () => {
     }
 
     return (
-        <section className="w-full flex flex-col items-center justify-center my-8 px-8">
+        <section className="w-full flex flex-col items-center justify-center my-12 px-8">
             <div className="w-full max-w-300 flex flex-col md:flex-row justify-center items-center gap-y-8">
-                <form onSubmit={handleSubmit} className="flex w-full flex-col md:flex-row">
+                <form action="" encType="multipart/form-data" onSubmit={handleSubmit} className="flex w-full flex-col md:flex-row items-center">
                     <div className="w-full md:w-1/2 flex justify-center mb-4 md:mb-0 overflow-hidden">
-                        <div className="rounded-lg object-cover flex items-center justify-center focus:outline-none border border-neutral-500 p-2 size-96 md:size-128">
-                            <div className='flex flex-col items-center justify-center gap-2 text-center text-xs text-neutral-200'>
-                                {/* <div className="flex flex-wrap gap-2 justify-between">
-                                    {initialData?.images.map((url, index)=>(
-                                        <div key={index} className="relative inline-block group">
-                                            <img 
-                                                className="bg-white size-24 rounded-md" 
-                                                src={url} 
-                                                alt={initialData.name} 
-                                            />
-                                            <div onClick={()=> {
-                                                handleRemoveImage(url);
-                                            }} className="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-gray-100">
-                                                <Trash2Icon className="block h-4 w-4 text-muted-foreground" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <UploaderProvider uploadFn={uploadFn} autoUpload>
-                                    <ImageUploader
-                                        maxFiles={6}
-                                        maxSize={1024 * 1024 * 1} // 1 MB
-                                    />
-                                </UploaderProvider> */}
-                            </div>
-                        </div>
+                        <ImageSelect/>
                     </div>
                                 
                     <div className="w-full flex flex-col md:w-1/2 md:ml-6 gap-y-3">
@@ -91,24 +69,24 @@ const FormCreate = () => {
                             className='text-2xl font-semibold text-[#f6d061] placeholder:text-neutral-300 focus:outline-none w-full max-w-100 rounded-md'
                             placeholder="Cantidad Boletos"
                         />
-                        <div className="flex gap-2">
-                            <div className="bg-neutral-50 rounded-lg">
+                        <div className="flex gap-2 flex-col md:flex-row">
+                            <div className="bg-neutral-50 rounded-lg max-w-xs">
                                 <input
                                     type="date"
                                     value={selectedDate}
                                     onChange={handleDateChange}
                                     min={today}
-                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full max-w-xs cursor-pointer
+                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full cursor-pointer
                                     [&::-webkit-calendar-picker-indicator]:bg-neutral-50 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-lg [&::-webkit-calendar-picker-indicator]:cursor-pointer
                                     "
                                 />
                             </div>
-                            <div className="bg-neutral-50 rounded-lg">
+                            <div className="bg-neutral-50 rounded-lg max-w-xs">
                                 <input
                                     type="time"
                                     value={selectedTime}
                                     onChange={handleTimeChange}
-                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full max-w-xs cursor-pointer
+                                    className="bg-neutral-50 text-black px-3 py-2 rounded-lg focus:outline-none w-full cursor-pointer
                                     [&::-webkit-calendar-picker-indicator]:bg-neutral-50 [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:rounded-lg [&::-webkit-calendar-picker-indicator]:cursor-pointer
                                     "
                                 />
