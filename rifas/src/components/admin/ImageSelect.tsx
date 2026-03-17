@@ -1,12 +1,22 @@
-import { useState, useRef } from 'react';
-import { Upload, Image, X, CheckCircle2, AlertCircle, Trash } from 'lucide-react';
+import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import { Upload, Image, AlertCircle, Trash } from 'lucide-react';
 import { toast } from 'sonner';
+import { uploadImage } from '../../services/api';
 
-const ImageSelect = () => {
+export type ImageSelectHandle = {
+    upload: () => Promise<string | null>;
+};
+
+type ImageSelectProps = {
+    onImageUploaded?: (url: string) => void;
+};
+
+const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUploaded }, ref) => {
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
-    const [dragActive, setDragActive] = useState(false);
-    const [error, setError] = useState('');
+    const [dragActive, setDragActive] = useState<boolean>(false);
+    const [error, setError] = useState<string>('');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (selectedFile: File | undefined) => {
@@ -84,6 +94,30 @@ const ImageSelect = () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    const handleUpload = async (): Promise<string | null> => {
+        if(!file){
+            setError("Imagen requerida");
+            return null;
+        }
+
+        setError('');
+
+        try {
+            const res = await uploadImage(file);
+            if (!res?.success || !res?.url) {
+                setError(res?.message || 'No se pudo subir la imagen');
+                toast.error(res?.message || 'No se pudo subir la imagen');
+                return null;
+            }
+            onImageUploaded?.(res.url);
+            return res.url as string;
+        } catch (err) {
+            setError('Error al subir la imagen');
+            toast.error('Error al subir la imagen');
+            return null;
+        }
+    }
+
     const getFileIcon = () => {
         if (!file){
             return (
@@ -95,6 +129,10 @@ const ImageSelect = () => {
             <Image className="w-12 h-12 text-neutral-700" />
         )
     };
+
+    useImperativeHandle(ref, () => ({
+        upload: handleUpload,
+    }));
 
     return (
         <div className="bg-neutral-300 p-4 rounded-lg w-full max-w-lg h-96 md:h-128">
@@ -147,33 +185,23 @@ const ImageSelect = () => {
                             )}
                         </div>
 
-                        {/* Formatos soportados */}
                         {!file && !error && (
-                        <p className="text-neutral-700 text-xs text-center">
-                            JPG, PNG, GIF o WEBP (Máx. 3MB)
-                        </p>
+                            <p className="text-neutral-700 text-xs text-center">
+                                JPG, PNG, GIF o WEBP (Máx. 3MB)
+                            </p>
                         )}
 
-                        {/* Mensaje de error */}
                         {error && (
-                        <div className="flex items-center gap-2 text-red-600 bg-red-100 px-3 py-1 rounded-full">
-                            <AlertCircle className="w-4 h-4" />
-                            <span className="text-sm">{error}</span>
-                        </div>
-                        )}
-
-                        {/* Indicador de éxito */}
-                        {file && !error && !preview && (
-                        <div className="flex items-center gap-2 text-green-600 bg-green-100 px-3 py-1 rounded-full">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span className="text-sm">Archivo listo</span>
-                        </div>
+                            <div className="flex items-center gap-2 text-red-600 bg-red-100 px-3 py-1 rounded-full">
+                                <AlertCircle className="w-4 h-4" />
+                                <span className="text-sm">{error}</span>
+                            </div>
                         )}
                     </>
                 )}
             </div>
         </div>
     );
-};
+});
 
 export default ImageSelect;

@@ -1,16 +1,21 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { createRaffle } from "../services/api";
-import ImageSelect from "./ImageSelect";
+import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
-const FormCreate = () => {
+const CreatePage = () => {
     const [name, setName] = useState<string>('');
     const [image, setImage] = useState<string>('');
-    const [price, setPrice] = useState<number>();
-    const [amount, setAmount] = useState<number>();
+    const [price, setPrice] = useState<number | undefined>(undefined);
+    const [amount, setAmount] = useState<number | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const imageSelectRef = useRef<ImageSelectHandle>(null);
 
     const today = new Date().toISOString().split('T')[0];
+
+    const navigate = useNavigate();
 
     const handleDateChange = (e: any) => {
         setSelectedDate(e.target.value);
@@ -18,19 +23,61 @@ const FormCreate = () => {
     const handleTimeChange = (e: any) => {
         setSelectedTime(e.target.value);
     };
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>)=>{
         e.preventDefault();
 
-        const formatedDate = selectedDate.replaceAll('-', '') + ' ' + selectedTime+':00'
+        if(name.trim() === ''){
+            toast.error('Nombre requerido')
+            return;
+        }
+        if(!price || price <=0){
+            toast.error('Precio requerido')
+            return;
+        }
+        if(!amount || amount <=0){
+            toast.error('Cantidad requerida')
+            return;
+        }
+        if(selectedDate.trim() === ''){
+            toast.error('Fecha requerida')
+            return;
+        }
+        if(selectedTime.trim() === ''){
+            toast.error('Hora requerida')
+            return;
+        }
 
-        await createRaffle({
+        const formatedDate = selectedDate.replaceAll('-', '') + ' ' + selectedTime+':00'
+        const uploadedUrl = await imageSelectRef.current?.upload();
+
+        if(!uploadedUrl){
+            toast.error('Imagen requerida')
+            return;
+        }
+        setImage(uploadedUrl);
+        
+        const promise = createRaffle({
             Nombre: name,
-            Imagen: image,
+            Imagen: uploadedUrl,
             Fecha: formatedDate,
             PrecioBoleto: price ? price : 0,
             CantidadBoletos: amount ? amount : 0,
             Activa: true,
+        })
+
+        toast.promise(promise, {
+            loading: "Cargando rifa...",
+            success: "Rifa creada con exito!",
+            error: "Fallo al crear rifa."
         });
+
+        promise
+            .then(data => {
+                if (data.success) {
+                    navigate("/");
+                }
+            })
     }
 
     return (
@@ -38,10 +85,10 @@ const FormCreate = () => {
             <div className="w-full max-w-300 flex flex-col md:flex-row justify-center items-center gap-y-8">
                 <form action="" encType="multipart/form-data" onSubmit={handleSubmit} className="flex w-full flex-col md:flex-row items-center">
                     <div className="w-full md:w-1/2 flex justify-center mb-4 md:mb-0 overflow-hidden">
-                        <ImageSelect/>
+                        <ImageSelect ref={imageSelectRef} onImageUploaded={(url) => setImage(url)} />
                     </div>
                                 
-                    <div className="w-full flex flex-col md:w-1/2 md:ml-6 gap-y-3">
+                    <div className="w-full max-w-lg flex flex-col md:w-1/2 md:ml-6 gap-y-3">
                         <input
                             type="text"
                             id="nombre"
@@ -101,4 +148,4 @@ const FormCreate = () => {
     );
 }
  
-export default FormCreate;
+export default CreatePage;

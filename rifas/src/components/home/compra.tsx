@@ -1,6 +1,8 @@
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
-import { CreditCard } from "./shared-assets/credit-card/credit-card";
+import { CreditCard } from "../ui/credit-card";
+import { getActiveRaffle } from "../../services/api";
+import { formatearMoneda } from "../../services/currencyFormat";
 
 interface Contacto {
     nombre: string;
@@ -10,6 +12,10 @@ interface Contacto {
 const CompraModal = ({onClose}: {
     onClose: ()=> void
 }) => {
+    const [raffle, setRaffle] = useState<any>(null);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
     const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
     const [validated, setValidated] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -18,6 +24,26 @@ const CompraModal = ({onClose}: {
         nombre: '',
         telefono: 0,
     });
+
+    useEffect(()=>{
+        const loadRaffle = async ()=> {
+            try{
+                const data = await getActiveRaffle();
+    
+                if(data.error){
+                    setError(data.error);
+                }else{
+                    setRaffle(data);
+                }
+            } catch(err){
+                setError("Error al conectar con el servidor");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadRaffle();
+    }, [])
 
     const handleFirstSubmit = (e: any) => {
         e.preventDefault();
@@ -67,6 +93,32 @@ const CompraModal = ({onClose}: {
         );
     }
 
+    if(loading){
+         return(
+            <div className="w-full h-[80vh] bg-gray-300 animate-pulse flex items-end justify-center">
+                <div className="w-60 mb-8">
+                    <div className="bg-gray-400 text-lg font-semibold text-center rounded-lg w-full text-black border-none p-3">&nbsp;</div>
+                </div>
+            </div>
+        )
+    }
+
+    if(error){
+        return (
+            <div className="w-full h-[80vh] bg-red-100 flex items-center justify-center">
+                <p className="text-red-500 text-lg font-semibold">{error}</p>
+            </div>
+        )
+    }
+
+    if(!raffle){
+        return (
+            <div className="w-full h-[80vh] bg-gray-300 flex items-center justify-center">
+                <p className="text-gray-500 text-lg font-semibold">No hay rifas activas</p>
+            </div>
+        )
+    }
+
     return (
         <div onClick={onClose} className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
             <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl w-full max-w-150">
@@ -74,10 +126,10 @@ const CompraModal = ({onClose}: {
                     <>
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">
                             <h2 className="text-white text-2xl font-semibold">Comprar Boletos</h2>
-                            <p className="text-lg text-neutral-300">Playstation 5</p>
+                            <p className="text-lg text-neutral-300">{raffle.data.Nombre}</p>
                         </div>
                         <div className="grid grid-cols-7 md:grid-cols-10 gap-2 p-6 max-h-[50vh] overflow-y-auto">
-                            {Array.from({ length: 100 }, (_, i) => i + 1).map((num) => (
+                            {Array.from({ length: raffle.data.CantidadBoletos }, (_, i) => i + 1).map((num) => (
                                 <button 
                                     key={num}
                                     onClick={() => toggleTicket(num)}
@@ -102,7 +154,7 @@ const CompraModal = ({onClose}: {
                     <>
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">
                             <h2 className="text-white text-2xl font-semibold">Comprar Boletos</h2>
-                            <p className="text-lg text-neutral-300">Playstation 5</p>
+                            <p className="text-lg text-neutral-300">{raffle.data.Nombre}</p>
                         </div>
 
                         <h2 className='text-2xl font-semibold mb-4 px-6 text-black'>Información de Contacto</h2>
@@ -146,7 +198,7 @@ const CompraModal = ({onClose}: {
                     <>
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">
                             <h2 className="text-white text-2xl font-semibold">Comprar Boletos</h2>
-                            <p className="text-lg text-neutral-300">Playstation 5</p>
+                            <p className="text-lg text-neutral-300">{raffle.data.Nombre}</p>
                         </div>
 
                         <div className="flex flex-col items-center px-6 space-y-4">
@@ -163,7 +215,7 @@ const CompraModal = ({onClose}: {
                                     </div>
                                 </div>
                                 <div className="flex">
-                                    <p className="text-md text-black font-medium">Precio: <span className="font-normal">$150</span></p>
+                                    <p className="text-md text-black font-medium">Total: <span className="font-normal">{formatearMoneda(selectedTickets.length * raffle.data.PrecioBoleto)}</span></p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">

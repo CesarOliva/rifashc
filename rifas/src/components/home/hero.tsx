@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import CompraModal from "./compra";
-import { getActiveRaffle } from "../services/api";
-import { parseDate } from "../services/parseDate";
+import { getActiveRaffle } from "../../services/api";
+import { parseDate } from "../../services/parseDate";
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -100,9 +100,9 @@ const Hero = () => {
     return (
         <>
             <div id="compra" className="w-full bg-linear-to-r from-[#ff0000] to-[#ff6a00] flex flex-col items-center py-8">
-                <div className="max-w-300 pb-3 pt-3">
+                <div className="max-w-300 py-3">
                     <h3 className="text-white text-3xl font-semibold text-center">PRÓXIMO SORTEO</h3>
-                    <p className="text-white text-lg font-normal text-center mb-4 mt-1">
+                    <p className="text-white 11ztext-lg font-normal text-center mb-4 mt-1">
                         Aún estas a tiempo para comprar tus boletos para nuestro siguiente sorteo<br/>
                         <span className="text-white text-xl font-bold">"{raffle.data.Nombre}"</span><br/>
                         <span className="text-white text-xl font-bold">${raffle.data.PrecioBoleto}</span> por boleto

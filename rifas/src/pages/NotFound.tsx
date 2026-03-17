@@ -1,6 +1,5 @@
 const NotFoundPage = () => {
     return (
-        //Not Found Page
         <div className="flex flex-col items-center justify-center h-[60vh]">
             <h1 className="text-6xl font-bold text-[#f6d061]">404</h1>
             <p className="text-2xl text-neutral-300 mt-4">Pagina no encontrada</p>

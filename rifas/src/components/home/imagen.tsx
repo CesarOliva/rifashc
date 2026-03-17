@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getActiveRaffle } from "../services/api";
+import { getActiveRaffle } from "../../services/api";
 
 const Imagen = () => {
     const [raffle, setRaffle] = useState<any>(null);
