@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import CompraModal from "./compra";
 import { getActiveRaffle } from "../../services/api";
 import { parseDate } from "../../services/parseDate";
+import { CalendarX } from "lucide-react";
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState<boolean>(false)
@@ -17,25 +18,23 @@ const Hero = () => {
         seconds:0
     })
     
-    useEffect(()=>{
-        const loadRaffle = async ()=> {
-            try{
+    useEffect(() => {
+        const loadRaffle = async () => {
+            try {
                 const data = await getActiveRaffle();
-    
-                if(data.error){
-                    setError(data.error);
-                }else{
-                    setRaffle(data);
+                if (!data.success) {
+                    setError("No hay rifa activa");
+                } else {
+                    setRaffle(data.data);
                 }
             } catch(err){
                 setError("Error al conectar con el servidor");
             } finally {
                 setLoading(false);
             }
-        }
-
+        };
         loadRaffle();
-    }, [])
+    }, []);
 
     function getCountdown(date: Date) {
         const now = new Date().getTime()
@@ -59,9 +58,9 @@ const Hero = () => {
     }
 
     useEffect(()=>{
-        if(!raffle?.data.Fecha) return
+        if(!raffle?.Fecha) return
 
-        const date = parseDate(raffle.data.Fecha)
+        const date = parseDate(raffle.Fecha)
 
         const interval = setInterval(()=>{
             setTime(getCountdown(date))
@@ -81,18 +80,23 @@ const Hero = () => {
         )
     }
 
-    if(error){
+    if(error || !raffle){
         return (
-            <div className="w-full h-[80vh] bg-red-100 flex items-center justify-center">
-                <p className="text-red-500 text-lg font-semibold">{error}</p>
-            </div>
-        )
-    }
-
-    if(!raffle){
-        return (
-            <div className="w-full h-[80vh] bg-gray-300 flex items-center justify-center">
-                <p className="text-gray-500 text-lg font-semibold">No hay rifas activas</p>
+            <div className="w-full bg-linear-to-r from-[#ff0000] to-[#ff6a00] flex flex-col items-center p-8">
+                <div className="max-w-300 py-3 min-h-70 flex items-center gap-4">
+                    <div className="bg-amber-100 p-3 rounded-full">
+                        <CalendarX className="size-12 text-amber-600" />
+                    </div>
+                    
+                    <div className="flex-1">
+                        <h4 className="text-xl font-semibold text-amber-100">
+                            No hay rifas activas
+                        </h4>
+                        <p className="text-lg text-amber-100">
+                            Las próximas rifas estarán disponibles pronto
+                        </p>
+                    </div>
+                </div>
             </div>
         )
     }
@@ -104,8 +108,8 @@ const Hero = () => {
                     <h3 className="text-white text-3xl font-semibold text-center">PRÓXIMO SORTEO</h3>
                     <p className="text-white 11ztext-lg font-normal text-center mb-4 mt-1">
                         Aún estas a tiempo para comprar tus boletos para nuestro siguiente sorteo<br/>
-                        <span className="text-white text-xl font-bold">"{raffle.data.Nombre}"</span><br/>
-                        <span className="text-white text-xl font-bold">${raffle.data.PrecioBoleto}</span> por boleto
+                        <span className="text-white text-xl font-bold">"{raffle.Nombre}"</span><br/>
+                        <span className="text-white text-xl font-bold">${raffle.PrecioBoleto}</span> por boleto
                     </p>
 
                     <div className="flex justify-center gap-4 my-4 flex-wrap">

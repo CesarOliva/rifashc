@@ -6,15 +6,14 @@ const Imagen = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(()=>{
-        const loadRaffle = async ()=> {
-            try{
+    useEffect(() => {
+        const loadRaffle = async () => {
+            try {
                 const data = await getActiveRaffle();
-    
-                if(data.error){
-                    setError(data.error);
-                }else{
-                    setRaffle(data);
+                if (!data.success) {
+                    setError("No hay rifa activa");
+                } else {
+                    setRaffle(data.data);
                 }
             } catch(err){
                 setError("Error al conectar con el servidor");
@@ -22,9 +21,8 @@ const Imagen = () => {
                 setLoading(false);
             }
         };
-        
         loadRaffle();
-    }, [])
+    }, []);
 
     if(loading){
         return(
@@ -36,18 +34,13 @@ const Imagen = () => {
         )
     }
 
-    if(error){
+    if(error || !raffle){
         return (
-            <div className="w-full h-[80vh] bg-red-100 flex items-center justify-center">
-                <p className="text-red-500 text-lg font-semibold">{error}</p>
-            </div>
-        )
-    }
-
-    if(!raffle){
-        return (
-            <div className="w-full h-[80vh] bg-gray-300 flex items-center justify-center">
-                <p className="text-gray-500 text-lg font-semibold">No hay rifas activas</p>
+            <div className="w-full h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
+                style={{
+                    backgroundImage: "url('/hero.jpg')"
+                }}
+            >
             </div>
         )
     }
@@ -55,7 +48,7 @@ const Imagen = () => {
     return (
         <div className="w-full h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
             style={{
-                backgroundImage: `url(${raffle.data.Imagen})`
+                backgroundImage: `url(${raffle.Imagen})`
             }}
         >
             <div className="flex w-60 mb-8">

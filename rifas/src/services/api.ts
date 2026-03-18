@@ -39,15 +39,17 @@ export const updateActive = async (id: number) => {
         })
     });
 
-    const text = await res.text();
-    console.log(text);
-
-    return JSON.parse(text);
+    const data = await res.json();
+    if (!data.success) {
+        throw new Error(data.message || 'Error al actualizar la rifa');
+    }
+    
+    return data;
 }
 
 export const updateRaffle = async (raffle: RaffleProps) => {
     const res = await fetch(`${API_URL}/updateRaffle.php`,{
-        method:"POST",
+        method:"DELETE",
         headers:{
             "Content-Type":"application/json"
         },
@@ -63,8 +65,22 @@ export const updateRaffle = async (raffle: RaffleProps) => {
     return res.json()
 }
 
+export const getRaffleById = async (id: number) => {
+    const res = await fetch(`${API_URL}/getRaffleById.php`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            IdRifa: id
+        })
+    });
+
+    return await res.json();
+}
+
 export const getActiveRaffle = async () => {
-    const res = await fetch(`${API_URL}/getRaffle.php`);
+    const res = await fetch(`${API_URL}/getActiveRaffle.php`);
     return res.json();
 };
 
@@ -72,6 +88,20 @@ export const getAllRaffles = async () => {
     const res = await fetch(`${API_URL}/getAllRaffles.php`);
     return res.json();
 };
+
+export const removeRaffle = async (id: number) => {
+    const res = await fetch(`${API_URL}/removeRaffle.php`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            IdRifa: id
+        })
+    });
+
+    return await res.json();
+}
 
 export const uploadImage = async (file: File) => {
     const formData = new FormData();

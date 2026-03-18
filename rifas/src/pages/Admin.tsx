@@ -1,8 +1,10 @@
 import { CircleCheck, Pencil, Plus, X } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { formatearMoneda } from "../services/currencyFormat";
-import { getAllRaffles, updateActive } from "../services/api";
+import { getAllRaffles, removeRaffle, updateActive } from "../services/api";
 import { useEffect, useState } from "react";
+import RemoveDialog from "../components/AlertDialog";
+import { toast } from "sonner";
 
 const AdminPage = () => {
     const [raffles, setRaffles] = useState([]);
@@ -13,17 +15,40 @@ const AdminPage = () => {
         navigate('/Admin/Create');
     }
 
-    useEffect(() => {
-        const fetchRaffles = async () => {
-            const response = await getAllRaffles();
-            setRaffles(response.data || []);
-        };
+    const fetchRaffles = async () => {
+        const response = await getAllRaffles();
+        setRaffles(response.data || []);
+    };
 
+    useEffect(() => {
         fetchRaffles();
     }, []);
 
-    const changeActive = async (id: number) => {
-        await updateActive(id);
+    const changeActive = (id: number) => {
+        const promise = updateActive(id);
+
+        toast.promise(promise, {
+            loading: "Actualizando...",
+            success: "Rifa actualizada con exito!",
+            error: (err) => {
+                return `${err.message || 'Fallo al actualizar.'}`;
+            }
+        });
+        promise.then(()=>{
+            fetchRaffles();
+        })
+    }
+
+    const handleRemoveRaffle = async (id: number)=>{
+        const promise = removeRaffle(id);
+        toast.promise(promise, {
+            loading: 'Eliminando...',
+            success: 'Eliminado correctamente',
+            error: 'Error al eliminar'
+        });
+        promise.then(()=>{
+            fetchRaffles();
+        })
     }
 
     return (
@@ -89,24 +114,14 @@ const AdminPage = () => {
                                                 <div className="flex space-x-2">
                                                     <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
                                                         <Pencil onClick={()=> {
-                                                            // setProductToEdit({
-                                                            //     _id: id,
-                                                            //     name: name,
-                                                            //     price: price,
-                                                            //     envio: envio,
-                                                            //     description: description,
-                                                            //     slug: url,
-                                                            //     category: categoryId,
-                                                            //     imagen: image
-                                                            // });
-                                                            navigate("/Admin/Create")
-                                                        }} className="size-6"/>
+                                                            navigate(`/Admin/Rifa-${IdRifa}`)
+                                                        }} className="size-6 cursor-pointer"/>
                                                     </button>
-                                                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                                                        {/* <RemoveDialog 
-                                                            onConfirm={() => handleRemoveProduct(url)}
-                                                        /> */}
-                                                    </button>
+                                                    <div className="cursor-pointer p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                                        <RemoveDialog 
+                                                            onConfirm={() => handleRemoveRaffle(IdRifa)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>

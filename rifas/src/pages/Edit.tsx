@@ -4,7 +4,7 @@ import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSe
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
-const CreatePage = () => {
+const EditPage = () => {
     const [name, setName] = useState<string>('');
     const [image, setImage] = useState<string>('');
     const [price, setPrice] = useState<number | undefined>(undefined);
@@ -32,27 +32,22 @@ const CreatePage = () => {
 
         if(name.trim() === ''){
             toast.error('Nombre requerido')
-            setLoading(false)
             return;
         }
         if(!price || price <=0){
             toast.error('Precio requerido')
-            setLoading(false)
             return;
         }
         if(!amount || amount <=0){
             toast.error('Cantidad requerida')
-            setLoading(false)
             return;
         }
         if(selectedDate.trim() === ''){
             toast.error('Fecha requerida')
-            setLoading(false)
             return;
         }
         if(selectedTime.trim() === ''){
             toast.error('Hora requerida')
-            setLoading(false)
             return;
         }
 
@@ -91,7 +86,7 @@ const CreatePage = () => {
 
     return (
         <section className="w-full flex flex-col items-center justify-center my-12 px-8">
-            <div className="w-full max-w-300 flex flex-col md:flex-row justify-center items-center gap-y-8">
+            {/* <div className="w-full max-w-300 flex flex-col md:flex-row justify-center items-center gap-y-8">
                 <form action="" encType="multipart/form-data" onSubmit={handleSubmit} className="flex w-full flex-col md:flex-row items-center">
                     <div className="w-full md:w-1/2 flex justify-center mb-4 md:mb-0 overflow-hidden">
                         <ImageSelect ref={imageSelectRef} onImageUploaded={(url) => setImage(url)} />
@@ -152,9 +147,9 @@ const CreatePage = () => {
                         <button disabled={loading} type="submit" className="bg-[#f6d061] hover:bg-[#f5c946] font-semibold text-black h-12 w-36 rounded-lg transition-colors duration-300">GUARDAR</button>
                     </div>
                 </form>
-            </div>
+            </div> */}
         </section>
     );
 }
  
-export default CreatePage;
+export default EditPage;
