@@ -12,7 +12,7 @@ function App() {
       <Route element={<Layout/>}>
         <Route path="/" element={<HomePage/>}/>
         <Route path='/Admin' element={<AdminPage/>}/>
-        <Route path='/Admin/:RifaId' element={<EditPage/>}/>
+        <Route path='/Admin/:IdRifa' element={<EditPage/>}/>
         <Route path='/Admin/Create' element={<CreatePage/>}/>
         <Route path="*" element={<NotFoundPage />} />
       </Route>

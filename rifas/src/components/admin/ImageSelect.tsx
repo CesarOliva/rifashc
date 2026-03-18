@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Upload, Image, AlertCircle, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 import { uploadImage } from '../../services/api';
@@ -9,11 +9,13 @@ export type ImageSelectHandle = {
 
 type ImageSelectProps = {
     onImageUploaded?: (url: string) => void;
+    initialImageUrl?: string;
 };
 
-const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUploaded }, ref) => {
+const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUploaded, initialImageUrl }, ref) => {
     const [file, setFile] = useState<File | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
+    const [preview, setPreview] = useState<string | null>(initialImageUrl ?? null);
+    const [existingUrl, setExistingUrl] = useState<string | null>(initialImageUrl ?? null);
     const [dragActive, setDragActive] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
 
@@ -76,6 +78,7 @@ const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUp
     const handleRemoveFile = () => {
         setFile(null);
         setPreview(null);
+        setExistingUrl(null);
         setError('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -96,6 +99,9 @@ const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUp
 
     const handleUpload = async (): Promise<string | null> => {
         if(!file){
+            if (existingUrl) {
+                return existingUrl;
+            }
             setError("Imagen requerida");
             return null;
         }
@@ -133,6 +139,13 @@ const ImageSelect = forwardRef<ImageSelectHandle, ImageSelectProps>(({ onImageUp
     useImperativeHandle(ref, () => ({
         upload: handleUpload,
     }));
+
+    useEffect(() => {
+        if (!file) {
+            setPreview(initialImageUrl ?? null);
+            setExistingUrl(initialImageUrl ?? null);
+        }
+    }, [initialImageUrl, file]);
 
     return (
         <div className="bg-neutral-300 p-4 rounded-lg w-full max-w-lg h-96 md:h-128">

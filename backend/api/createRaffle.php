@@ -27,12 +27,15 @@ if(!$data){
 try{
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare("
+    $stmt = $pdo->prepare("UPDATE rifas SET Activa = 0");
+    $stmt->execute();
+    
+    $stmt2 = $pdo->prepare("
     INSERT INTO rifas (Nombre, Imagen, Fecha, PrecioBoleto, CantidadBoletos)
     VALUES (:Nombre, :Imagen, :Fecha, :PrecioBoleto, :CantidadBoletos)
     ");
 
-    $stmt->execute([
+    $stmt2->execute([
         ":Nombre" => $data["Nombre"],
         ":Imagen" => $data["Imagen"],
         ":Fecha" => $data["Fecha"],

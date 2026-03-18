@@ -22,13 +22,41 @@ if(!$data || !isset($data["IdRifa"])){
 try{
     $pdo->beginTransaction();
 
-    $stmt1 = $pdo->prepare("UPDATE rifas SET Activa = 0");
-    $stmt1->execute();
-
-    $stmt2 = $pdo->prepare("UPDATE rifas SET Activa = 1 WHERE IdRifa = :IdRifa");
-    $stmt2->execute([
+    $stmtCheck = $pdo->prepare("
+        SELECT Fecha FROM rifas WHERE IdRifa = :IdRifa
+    ");
+    $stmtCheck->execute([
         ":IdRifa" => $data["IdRifa"]
     ]);
+
+    $rifa = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+    if(!$rifa){
+        throw new Exception("La rifa no existe");
+    }
+    if(strtotime($rifa["Fecha"]) <= time()){
+        throw new Exception("No puedes activar una rifa con fecha pasada");
+    }
+
+    $stmt = $pdo->prepare("
+        UPDATE rifas 
+        SET Activa = NOT ACTIVA
+        WHERE IdRifa = :IdRifa
+    ");
+    $stmt->execute([
+        ":IdRifa" => $data["IdRifa"]
+    ]);
+
+    $count = $pdo->prepare("
+        SELECT COUNT(*) FROM rifas WHERE Activa = 1
+    ");
+    $count->execute();
+    $activeCount = $count->fetchColumn();
+
+    if($activeCount>1){
+        throw new Exception("No puedes tener mas de una rifa activa");
+        $pdo->rollBack();
+    }
 
     $pdo->commit();
 
@@ -36,11 +64,10 @@ try{
         "success" => true,
         "message" => "Rifa actualizada correctamente."
     ]);
-} catch(PDOException $e){
+}catch(Exception $e){
     $pdo->rollBack();
     echo json_encode([
         "success" => false,
         "message" => $e->getMessage()
     ]);
 }
-?>

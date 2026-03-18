@@ -1,9 +1,8 @@
 <?php
 
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 require "../config/database.php";
 
@@ -23,23 +22,12 @@ try{
     $pdo->beginTransaction();
 
     $stmt = $pdo->prepare("
-        UPDATE rifas
-        SET
-            Nombre = :Nombre,
-            Imagen = :Imagen,
-            Fecha = :Fecha,
-            PrecioBoleto = :PrecioBoleto,
-            CantidadBoletos = :CantidadBoletos
+        DELETE FROM rifas
         WHERE IdRifa = :IdRifa
     ");
 
     $stmt->execute([
         ":IdRifa" => $data["IdRifa"],
-        ":Nombre" => $data["Nombre"],
-        ":Imagen" => $data["Imagen"],
-        ":Fecha" => $data["Fecha"],
-        ":PrecioBoleto" => $data["PrecioBoleto"],
-        ":CantidadBoletos" => $data["CantidadBoletos"],
     ]);
 
     $pdo->commit();
@@ -52,5 +40,6 @@ try{
     echo json_encode([
         "success" => false,
         "message" => 'Fallo al actualizar la rifa'
+        // "message" => $e->getMessage()
     ]);
 }
