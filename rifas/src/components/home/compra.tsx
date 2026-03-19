@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { CreditCard } from "../ui/credit-card";
-import { getActiveRaffle } from "../../services/api";
+import { buyTickets, getActiveRaffle, getTicketsByRaffle } from "../../services/api";
 import { formatearMoneda } from "../../services/currencyFormat";
 
 interface Contacto {
@@ -15,6 +15,7 @@ const CompraModal = ({onClose}: {
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
 
     const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
     const [validated, setValidated] = useState<boolean>(false);
@@ -34,6 +35,12 @@ const CompraModal = ({onClose}: {
                     setError(data.error);
                 }else{
                     setRaffle(data);
+                    // Obtener boletos comprados
+                    const ticketsData = await getTicketsByRaffle(data.data.IdRifa);
+                    if(ticketsData.data && Array.isArray(ticketsData.data)){
+                        const ticketNumbers = ticketsData.data.map((ticket: any) => ticket.Numero);
+                        setPurchasedTickets(ticketNumbers);
+                    }
                 }
             } catch(err){
                 setError("Error al conectar con el servidor");
@@ -75,6 +82,17 @@ const CompraModal = ({onClose}: {
     };
 
     const handlePay = ()=>{
+        selectedTickets.map((number)=>{
+            const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, number);
+                toast.promise(promise, {
+                    loading: 'Comprando...',
+                    success: 'Boletos por confirmar',
+                    error: 'Error al comprar'
+                });
+                // promise.then(()=>{
+                //     // fetchRaffles();
+                // })
+        })
     }
 
     const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -86,6 +104,10 @@ const CompraModal = ({onClose}: {
     };
 
     const toggleTicket = (num: number)=> {
+        // No permitir seleccionar boletos comprados
+        if(purchasedTickets.includes(num)){
+            return;
+        }
         setSelectedTickets((prev)=>
             prev.includes(num)
                 ? prev.filter((t) => t !== num)
@@ -133,10 +155,13 @@ const CompraModal = ({onClose}: {
                                 <button 
                                     key={num}
                                     onClick={() => toggleTicket(num)}
-                                    className={`rounded-lg p-2 text-white cursor-pointer
-                                        ${selectedTickets.includes(num)
-                                            ? 'bg-[#ff2a2a]'
-                                            : 'bg-neutral-700 hover:bg-neutral-600}'
+                                    disabled={purchasedTickets.includes(num)}
+                                    className={`rounded-lg p-2 text-white cursor-pointer disabled:cursor-not-allowed
+                                        ${purchasedTickets.includes(num)
+                                            ? 'bg-[#ff2a2a] disabled:opacity-75'
+                                            : selectedTickets.includes(num)
+                                            ? 'bg-green-600'
+                                            : 'bg-neutral-700 hover:bg-neutral-600'
                                         }
                                     `}
                                 >

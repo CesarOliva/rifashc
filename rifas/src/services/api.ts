@@ -145,3 +145,27 @@ export const loginAdmin = async (usuario: string, password: string) => {
 
     return handleJsonResponse(res);
 };
+
+export const buyTickets = async (IdRifa: number, Nombre: string, Telefono: number, Numero: number) => {
+    const res = await fetch(`${API_URL}/buyTickets.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            IdRifa: IdRifa, 
+            Nombre: Nombre,
+            Telefono: Telefono, 
+            Numero: Numero
+        })
+    });
+
+    return handleJsonResponse(res);
+}
+
+export const getTicketsByRaffle = async (id: number) => {
+    const res = await fetch(`${API_URL}/getTicketsByRaffle.php?IdRifa=${id}`, {
+        method: "GET"
+    });
+    return await res.json();
+};

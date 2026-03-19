@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { getRaffleById, updateRaffle } from "../services/api";
+import { getRaffleById, getTicketsByRaffle, updateRaffle } from "../services/api";
 import { parseDate } from "../services/parseDate";
 import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
 import { toast } from "sonner";
@@ -20,6 +20,12 @@ const EditPage = () => {
                     setError(data?.message || "Rifa no encontrada");
                 } else {
                     setRaffle(data.data);
+
+                    const ticketsData = await getTicketsByRaffle(data.data.IdRifa);
+                    if(ticketsData.data && Array.isArray(ticketsData.data)){
+                        const ticketNumbers = ticketsData.data.map((ticket: any) => ticket.Numero);
+                        setPurchasedTickets(ticketNumbers);
+                    }
                 }
             } catch(err){
                 console.error(err);
@@ -40,6 +46,10 @@ const EditPage = () => {
     const [selectedTime, setSelectedTime] = useState<string>('');
     const imageSelectRef = useRef<ImageSelectHandle>(null);
 
+    const [tickets, setTickets] = useState<any[]>([]);
+    const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
+    const [selectedTicket, setSelectedTicket] = useState<number | null>(null);
+
     const formatDateInput = (date: Date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -52,6 +62,21 @@ const EditPage = () => {
         const minutes = String(date.getMinutes()).padStart(2, '0');
         return `${hours}:${minutes}`;
     };
+
+    const loadTickets = async (id: number) => {
+        try {
+            const data = await getTicketsByRaffle(id);
+            if (data?.success) {
+                setTickets(data.data);
+                console.log(data.data);
+            } else {
+                toast.error(data?.message || "Error al cargar boletos");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error al conectar con el servidor");
+        }
+    }
 
     useEffect(()=>{
         if(raffle){
@@ -67,6 +92,8 @@ const EditPage = () => {
                 setSelectedDate('');
                 setSelectedTime('');
             }
+
+            loadTickets(raffle.IdRifa);
         }
     }, [raffle])
 
@@ -224,6 +251,52 @@ const EditPage = () => {
                         <button disabled={loading} type="submit" className="bg-[#f6d061] hover:bg-[#f5c946] font-semibold text-black h-12 w-36 rounded-lg transition-colors duration-300">GUARDAR</button>
                     </div>
                 </form>
+            </div>
+            
+            <div className="w-full max-w-300 flex flex-col justify-center items-center gap-y-8 mt-8">
+                <h2 className="text-2xl font-bold text-white text-center">Boletos Comprados</h2>
+
+                <div className="w-full flex flex-col justify-center items-center gap-y-6">
+                    <div className="w-full max-w-2xl flex flex-col md:ml-6 gap-y-3">
+                        <div className="grid grid-cols-7 md:grid-cols-10 gap-2">
+                            {Array.from({ length: amount! }, (_, i) => i + 1).map((num) => (
+                                <button 
+                                    key={num}
+                                    className={`rounded-lg p-2 text-white cursor-pointer disabled:cursor-not-allowed
+                                        ${purchasedTickets.includes(num)
+                                            ? 'bg-[#ff2a2a] disabled:opacity-75'
+                                            : 'bg-neutral-700 hover:bg-neutral-600'
+                                        }
+                                    `}
+                                    onClick={()=>{setSelectedTicket(num)}}
+                                >
+                                    {num}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:ml-6 gap-y-3">
+                        {selectedTicket !== null && (
+                            <div className="bg-neutral-800 rounded-lg">
+                                <h3 className="text-xl font-bold text-white">Detalles del Boleto</h3>
+                                <p className="text-gray-300">Número: {selectedTicket}</p>
+
+                                {tickets.map((ticket) => {
+                                    if(ticket.Numero === selectedTicket){
+                                        return (
+                                            <div key={ticket.IdBoleto}>
+                                                <p className="text-gray-300">Comprador: {ticket.Nombre}</p>
+                                                <p className="text-gray-300">Teléfono: {ticket.Telefono}</p>
+                                            </div>
+                                        )
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </section>
     );
