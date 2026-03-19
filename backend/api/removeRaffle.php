@@ -5,6 +5,9 @@ header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 require "../config/database.php";
+require "../lib/adminAuth.php";
+
+require_admin();
 
 $pdo = db();
 
@@ -40,6 +43,5 @@ try{
     echo json_encode([
         "success" => false,
         "message" => 'Fallo al actualizar la rifa'
-        // "message" => $e->getMessage()
     ]);
 }

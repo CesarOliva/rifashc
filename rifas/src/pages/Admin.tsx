@@ -5,6 +5,7 @@ import { getAllRaffles, removeRaffle, updateActive } from "../services/api";
 import { useEffect, useState } from "react";
 import RemoveDialog from "../components/AlertDialog";
 import { toast } from "sonner";
+import { clearAdminToken } from "../services/auth";
 
 const AdminPage = () => {
     const [raffles, setRaffles] = useState([]);
@@ -13,6 +14,10 @@ const AdminPage = () => {
 
     const handleCreate = () => {
         navigate('/Admin/Create');
+    }
+    const handleLogout = () => {
+        clearAdminToken();
+        navigate("/Admin/Login");
     }
 
     const fetchRaffles = async () => {
@@ -59,6 +64,9 @@ const AdminPage = () => {
                     <p className="text-lg text-neutral-300 text-center sm:text-start mb-2 sm:mb-0">Administra las rifas activas o crea una nueva!</p>
                 </div>
                 <div className="flex items-center space-x-4">
+                    <button onClick={handleLogout} className="px-4 py-2 text-neutral-200 border border-neutral-500 rounded-lg hover:bg-neutral-800 cursor-pointer">
+                        Cerrar sesion
+                    </button>
                     <button onClick={handleCreate} className="ml-2 px-4 py-2 text-black cursor-pointer rounded-lg bg-neutral-200 hover:bg-neutral-300 flex items-center font-medium">
                         <Plus className="mr-2"/>
                         Nueva Rifa

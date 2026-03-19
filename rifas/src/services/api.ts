@@ -1,3 +1,5 @@
+import { clearAdminToken, getAdminToken } from "./auth";
+
 const API_URL = "http://localhost:8000/api";
 
 type RaffleProps = {
@@ -10,11 +12,27 @@ type RaffleProps = {
     Activa?: Boolean;
 }
 
+const getAuthHeaders = (): Record<string, string> => {
+    const token = getAdminToken();
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+};
+
+const handleJsonResponse = async (res: Response) => {
+    if (res.status === 401) {
+        clearAdminToken();
+        throw new Error("No autorizado");
+    }
+
+    return res.json();
+};
+
 export const createRaffle = async (raffle: RaffleProps) => {
     const res = await fetch(`${API_URL}/createRaffle.php`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
         },
         body: JSON.stringify({
             Nombre: raffle.Nombre,
@@ -25,7 +43,7 @@ export const createRaffle = async (raffle: RaffleProps) => {
         })
     });
 
-    const data = await res.json();
+    const data = await handleJsonResponse(res);
     return data;
 }
 
@@ -33,14 +51,15 @@ export const updateActive = async (id: number) => {
     const res = await fetch(`${API_URL}/updateActive.php`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
         },
         body: JSON.stringify({
             IdRifa: id
         })
     });
 
-    const data = await res.json();
+    const data = await handleJsonResponse(res);
     if (!data.success) {
         throw new Error(data.message || 'Error al actualizar la rifa');
     }
@@ -52,7 +71,8 @@ export const updateRaffle = async (raffle: RaffleProps) => {
     const res = await fetch(`${API_URL}/updateRaffle.php`,{
         method:"POST",
         headers:{
-            "Content-Type":"application/json"
+            "Content-Type":"application/json",
+            ...getAuthHeaders()
         },
         body: JSON.stringify({
             IdRifa: raffle.IdRifa,
@@ -64,7 +84,7 @@ export const updateRaffle = async (raffle: RaffleProps) => {
         })
     });
 
-    return res.json()
+    return handleJsonResponse(res);
 }
 
 export const getRaffleById = async (id: number) => {
@@ -88,14 +108,15 @@ export const removeRaffle = async (id: number) => {
     const res = await fetch(`${API_URL}/removeRaffle.php`, {
         method: "DELETE",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
         },
         body: JSON.stringify({
             IdRifa: id
         })
     });
 
-    return await res.json();
+    return await handleJsonResponse(res);
 }
 
 export const uploadImage = async (file: File) => {
@@ -104,8 +125,23 @@ export const uploadImage = async (file: File) => {
 
     const res = await fetch(`${API_URL}/uploadImage.php`,{
         method:"POST",
-        body: formData
+        body: formData,
+        headers: {
+            ...getAuthHeaders()
+        }
     })
 
-    return res.json()
+    return handleJsonResponse(res);
 }
+
+export const loginAdmin = async (usuario: string, password: string) => {
+    const res = await fetch(`${API_URL}/login.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ usuario, password })
+    });
+
+    return handleJsonResponse(res);
+};
