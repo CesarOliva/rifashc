@@ -14,6 +14,7 @@ const CompraModal = ({onClose}: {
 }) => {
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
+    const [disabled, setDisabled] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
 
@@ -82,6 +83,7 @@ const CompraModal = ({onClose}: {
     };
 
     const handlePay = ()=>{
+        setDisabled(true);
         selectedTickets.map((number)=>{
             const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, number);
                 toast.promise(promise, {
@@ -89,9 +91,10 @@ const CompraModal = ({onClose}: {
                     success: 'Boletos por confirmar',
                     error: 'Error al comprar'
                 });
-                // promise.then(()=>{
-                //     // fetchRaffles();
-                // })
+                promise.then(()=>{
+                    onClose();
+                    setDisabled(false);
+                })
         })
     }
 
@@ -104,7 +107,6 @@ const CompraModal = ({onClose}: {
     };
 
     const toggleTicket = (num: number)=> {
-        // No permitir seleccionar boletos comprados
         if(purchasedTickets.includes(num)){
             return;
         }
@@ -252,7 +254,7 @@ const CompraModal = ({onClose}: {
                         <div className="flex justify-end flex-wrap gap-2 p-6">
                             <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg cursor-pointer">Cancelar</button>
                             <button onClick={()=> setCurrentStep(2)} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg cursor-pointer">Anterior</button>
-                            <button onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Listo</button>
+                            <button disabled={disabled} onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Listo</button>
                         </div>
                     </>
                 )}

@@ -25,5 +25,9 @@ CREATE TABLE IF NOT EXISTS boletos (
     FOREIGN KEY (IdCliente) REFERENCES clientes(IdCliente)
 );
 
+ALTER TABLE boletos ADD UNIQUE (IdRifa, Numero);
+CREATE UNIQUE INDEX idx_rifa_numero
+ON boletos (IdRifa, Numero);
+
 --.\sqlite3 rifas.sqlite
 --.read schema.sql

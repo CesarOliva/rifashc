@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { getRaffleById, getTicketsByRaffle, updateRaffle } from "../services/api";
+import { getRaffleById, getTicketsByRaffle, removeTicket, updatePayed, updateRaffle } from "../services/api";
 import { parseDate } from "../services/parseDate";
 import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
+import { CircleCheck, X } from "lucide-react";
+import RemoveDialog from "../components/AlertDialog";
 
 const EditPage = () => {
     const {IdRifa} = useParams();
@@ -23,12 +25,10 @@ const EditPage = () => {
 
                     const ticketsData = await getTicketsByRaffle(data.data.IdRifa);
                     if(ticketsData.data && Array.isArray(ticketsData.data)){
-                        const ticketNumbers = ticketsData.data.map((ticket: any) => ticket.Numero);
-                        setPurchasedTickets(ticketNumbers);
+                        syncTicketStatus(ticketsData.data);
                     }
                 }
             } catch(err){
-                console.error(err);
                 setError("Error al conectar con el servidor");
             } finally {
                 setLoading(false);
@@ -47,8 +47,27 @@ const EditPage = () => {
     const imageSelectRef = useRef<ImageSelectHandle>(null);
 
     const [tickets, setTickets] = useState<any[]>([]);
-    const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
+    const [paidTickets, setPaidTickets] = useState<number[]>([]);
+    const [unpaidTickets, setUnpaidTickets] = useState<number[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<number | null>(null);
+
+    const syncTicketStatus = (ticketList: any[]) => {
+        const paid: number[] = [];
+        const unpaid: number[] = [];
+
+        ticketList.forEach((ticket: any) => {
+            const isPaid = ticket.Pagado === true || ticket.Pagado === 1 || ticket.Pagado === '1';
+            
+            if (isPaid) {
+                paid.push(ticket.Numero);
+            } else {
+                unpaid.push(ticket.Numero);
+            }
+        });
+
+        setPaidTickets(paid);
+        setUnpaidTickets(unpaid);
+    };
 
     const formatDateInput = (date: Date) => {
         const year = date.getFullYear();
@@ -68,13 +87,44 @@ const EditPage = () => {
             const data = await getTicketsByRaffle(id);
             if (data?.success) {
                 setTickets(data.data);
-                console.log(data.data);
+                if (Array.isArray(data.data)) {
+                    syncTicketStatus(data.data);
+                }
             } else {
                 toast.error(data?.message || "Error al cargar boletos");
             }
         } catch (err) {
-            console.error(err);
             toast.error("Error al conectar con el servidor");
+        }
+    }
+
+    const updateActive = async (IdBoleto: number) => {
+        const promise = updatePayed(IdBoleto);
+        toast.promise(promise, {
+            loading: "Actualizando estado del boleto...",
+            success: "Estado del boleto actualizado con éxito!",
+            error: "Fallo al actualizar el estado del boleto."
+        });
+
+        if(promise){
+            promise.then(()=>{
+                loadTickets(raffle.IdRifa);
+            })
+        }
+    }
+
+    const deleteTicket = async (IdBoleto: number) => {
+        const promise = removeTicket(IdBoleto);
+        toast.promise(promise, {
+            loading: "Eliminando boleto...",
+            success: "Boleto eliminado con exito!",
+            error: "Fallo al eliminar boleto."
+        });
+
+        if(promise){
+            promise.then(()=>{
+                loadTickets(raffle.IdRifa);
+            })
         }
     }
 
@@ -263,9 +313,11 @@ const EditPage = () => {
                                 <button 
                                     key={num}
                                     className={`rounded-lg p-2 text-white cursor-pointer disabled:cursor-not-allowed
-                                        ${purchasedTickets.includes(num)
-                                            ? 'bg-[#ff2a2a] disabled:opacity-75'
-                                            : 'bg-neutral-700 hover:bg-neutral-600'
+                                        ${paidTickets.includes(num)
+                                            ? 'bg-green-600 disabled:opacity-75'
+                                            : unpaidTickets.includes(num)
+                                                ? 'bg-[#ff2a2a] disabled:opacity-75'
+                                                : 'bg-neutral-700 hover:bg-neutral-600'
                                         }
                                     `}
                                     onClick={()=>{setSelectedTicket(num)}}
@@ -278,22 +330,46 @@ const EditPage = () => {
 
                     <div className="flex flex-col md:ml-6 gap-y-3">
                         {selectedTicket !== null && (
-                            <div className="bg-neutral-800 rounded-lg">
-                                <h3 className="text-xl font-bold text-white">Detalles del Boleto</h3>
-                                <p className="text-gray-300">Número: {selectedTicket}</p>
-
-                                {tickets.map((ticket) => {
-                                    if(ticket.Numero === selectedTicket){
-                                        return (
-                                            <div key={ticket.IdBoleto}>
-                                                <p className="text-gray-300">Comprador: {ticket.Nombre}</p>
-                                                <p className="text-gray-300">Teléfono: {ticket.Telefono}</p>
-                                            </div>
-                                        )
-                                    }
-                                    return null;
-                                })}
-                            </div>
+                            //Tabla con detalles del boleto seleccionado
+                            <table className="min-w-full bg-neutral-800 rounded-lg text-left">
+                                <thead>
+                                    <tr>
+                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Número</th>
+                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Comprador</th>
+                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Teléfono</th>
+                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Pagado</th>
+                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Eliminar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {tickets.map((ticket) => {
+                                        if(ticket.Numero === selectedTicket){
+                                            return (
+                                                <tr key={ticket.IdBoleto} className="">
+                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Numero}</td>
+                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Nombre}</td>
+                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Telefono}</td>
+                                                    <td className="py-2 px-4 border-b border-gray-300 text-black">
+                                                        {ticket.Pagado ? (
+                                                            <CircleCheck onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-green-100 rounded-full text-sm"/>
+                                                        ): (
+                                                            <X onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-red-100 rounded-full text-sm"/>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">
+                                                        <div className="w-fit cursor-pointer p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                                            <RemoveDialog 
+                                                                onConfirm={() => deleteTicket(ticket.IdBoleto)}
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )
+                                        }
+                                        return null;
+                                    })}
+                                </tbody>
+                            </table>
                         )}
                     </div>
                 </div>

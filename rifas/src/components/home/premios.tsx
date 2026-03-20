@@ -16,7 +16,7 @@ const Premios = () => {
                         <CarouselContent>
                             {Array.from({ length: 3 }).map((_, index) => (
                                 <CarouselItem key={index} className="basis-full">
-                                    <img className="rounded-md h-100 object-cover" src="https://www.herrerasoficial.com/portadas/ganadores/695a73f475f1c.webp" alt="Ganador rifa"/>
+                                    <img className="rounded-md h-100 object-cover w-full" src="/proximamente.png" alt="Ganador rifa"/>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
@@ -27,7 +27,7 @@ const Premios = () => {
                         <CarouselContent>
                             {Array.from({ length: 3 }).map((_, index) => (
                                 <CarouselItem key={index} className="basis-full">
-                                    <img className="rounded-md h-100 object-cover" src="https://www.herrerasoficial.com/portadas/ganadores/695a73f3aafd1.webp" alt="Ganador rifa"/>
+                                    <img className="rounded-md h-100 object-cover w-full" src="/proximamente.png" alt="Ganador rifa"/>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
@@ -38,7 +38,7 @@ const Premios = () => {
                         <CarouselContent>
                             {Array.from({ length: 3 }).map((_, index) => (
                                 <CarouselItem key={index} className="basis-full">
-                                    <img className="rounded-md h-100 object-cover" src="https://www.herrerasoficial.com/portadas/ganadores/695a73f2e2f76.webp" alt="Ganador rifa"/>
+                                    <img className="rounded-md h-100 object-cover w-full" src="/proximamente.png" alt="Ganador rifa"/>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>

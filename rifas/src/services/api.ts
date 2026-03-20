@@ -169,3 +169,38 @@ export const getTicketsByRaffle = async (id: number) => {
     });
     return await res.json();
 };
+
+export const removeTicket = async (id: number) => {
+    const res = await fetch(`${API_URL}/removeTicket.php`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdBoleto: id
+        })
+    });
+
+    return await handleJsonResponse(res);
+}
+
+export const updatePayed = async (id: number) => {
+    const res = await fetch(`${API_URL}/updatePayed.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdBoleto: id
+        })
+    });
+
+    const data = await handleJsonResponse(res);
+    if (!data.success) {
+        throw new Error(data.message || 'Error al actualizar el boleto');
+    }
+    
+    return data;
+}
