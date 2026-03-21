@@ -84,18 +84,23 @@ const CompraModal = ({onClose}: {
 
     const handlePay = ()=>{
         setDisabled(true);
-        selectedTickets.map((number)=>{
-            const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, number);
-                toast.promise(promise, {
-                    loading: 'Comprando...',
-                    success: 'Boletos por confirmar',
-                    error: 'Error al comprar'
-                });
-                promise.then(()=>{
+        const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, selectedTickets);
+
+        toast.promise(promise, {
+            loading: 'Comprando...',
+            success: 'Boletos por confirmar',
+            error: 'Error al comprar'
+        });
+
+        promise
+            .then((data) => {
+                if (data.success) {
                     onClose();
-                    setDisabled(false);
-                })
-        })
+                }
+            })
+            .finally(() => {
+                setDisabled(false);
+            });
     }
 
     const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {

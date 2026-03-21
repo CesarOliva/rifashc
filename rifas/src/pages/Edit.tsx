@@ -328,9 +328,8 @@ const EditPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:ml-6 gap-y-3">
+                    <div className="flex flex-col md:ml-6 gap-y-3 w-full overflow-auto">
                         {selectedTicket !== null && (
-                            //Tabla con detalles del boleto seleccionado
                             <table className="min-w-full bg-neutral-800 rounded-lg text-left">
                                 <thead>
                                     <tr>

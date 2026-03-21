@@ -24,6 +24,28 @@ if(!$data){
     exit;
 }
 
+$numbers = [];
+if (isset($data["Numeros"]) && is_array($data["Numeros"])) {
+    $numbers = $data["Numeros"];
+} elseif (isset($data["Numero"])) {
+    $numbers = [$data["Numero"]];
+}
+
+$numbers = array_values(array_unique(array_map("intval", $numbers)));
+
+if (
+    !isset($data["IdRifa"]) ||
+    !isset($data["Nombre"]) ||
+    !isset($data["Telefono"]) ||
+    count($numbers) === 0
+) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Faltan campos obligatorios"
+    ]);
+    exit;
+}
+
 try{
     $pdo->beginTransaction();
 
@@ -51,33 +73,75 @@ try{
         ]);
     }
 
+    $priceStmt = $pdo->prepare("SELECT PrecioBoleto FROM rifas WHERE IdRifa = :IdRifa LIMIT 1");
+    $priceStmt->execute([
+        ":IdRifa" => $data["IdRifa"]
+    ]);
+    $raffle = $priceStmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$raffle) {
+        $pdo->rollBack();
+        echo json_encode([
+            "success" => false,
+            "message" => "Rifa no encontrada"
+        ]);
+        exit;
+    }
+
+    $checkStmt = $pdo->prepare("SELECT Numero FROM boletos WHERE IdRifa = :IdRifa AND Numero = :Numero LIMIT 1");
+    $occupied = [];
+
+    foreach ($numbers as $number) {
+        $checkStmt->execute([
+            ":IdRifa" => $data["IdRifa"],
+            ":Numero" => $number
+        ]);
+
+        if ($checkStmt->fetch(PDO::FETCH_ASSOC)) {
+            $occupied[] = $number;
+        }
+    }
+
+    if (count($occupied) > 0) {
+        $pdo->rollBack();
+        echo json_encode([
+            "success" => false,
+            "message" => "Boletos ocupados: " . implode(", ", $occupied)
+        ]);
+        exit;
+    }
+
     //Crear el boleto con el IdRifa y IdCliente
     $stmt1 = $pdo->prepare("
-        INSERT INTO boletos (IdRifa, IdCliente, Numero)
+        INSERT INTO boletos (IdRifa, IdCliente, Numero, Pagado)
         SELECT 
             :IdRifa,
             (SELECT IdCliente FROM clientes WHERE Telefono = :Telefono AND Nombre = :Nombre LIMIT 1),
-            :Numero
-        WHERE NOT EXISTS (
-            SELECT 1 
-            FROM boletos 
-            WHERE IdRifa = :IdRifa AND Numero = :Numero
-        );
+            :Numero,
+            0
+        ;
     ");
-    $stmt1->execute([
-        ":IdRifa" => $data["IdRifa"],
-        ":Telefono" => $data["Telefono"],
-        ":Nombre" => $data["Nombre"],
-        ":Numero" => $data["Numero"]
-    ]);
+
+    foreach ($numbers as $number) {
+        $stmt1->execute([
+            ":IdRifa" => $data["IdRifa"],
+            ":Telefono" => $data["Telefono"],
+            ":Nombre" => $data["Nombre"],
+            ":Numero" => $number
+        ]);
+    }
 
     $pdo->commit();
 
     echo json_encode([
         "success" => true,
-        "message" => "Boleto comprado"
+        "message" => "Boletos comprados"
     ]);
 } catch(PDOException $e){
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
     if($e->getCode() == 23000){
         echo json_encode([
             "success" => false,

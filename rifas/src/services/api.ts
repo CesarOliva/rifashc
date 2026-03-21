@@ -146,7 +146,7 @@ export const loginAdmin = async (usuario: string, password: string) => {
     return handleJsonResponse(res);
 };
 
-export const buyTickets = async (IdRifa: number, Nombre: string, Telefono: number, Numero: number) => {
+export const buyTickets = async (IdRifa: number, Nombre: string, Telefono: number, Numeros: number[]) => {
     const res = await fetch(`${API_URL}/buyTickets.php`, {
         method: "POST",
         headers: {
@@ -156,7 +156,7 @@ export const buyTickets = async (IdRifa: number, Nombre: string, Telefono: numbe
             IdRifa: IdRifa, 
             Nombre: Nombre,
             Telefono: Telefono, 
-            Numero: Numero
+            Numeros: Numeros
         })
     });
 

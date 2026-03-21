@@ -61,6 +61,7 @@ const CreatePage = () => {
 
         if(!uploadedUrl){
             toast.error('Imagen requerida')
+            setLoading(false)
             return;
         }
         setImage(uploadedUrl);
@@ -85,8 +86,8 @@ const CreatePage = () => {
                 if (data.success) {
                     navigate("/");
                 }
-                setLoading(false)
             })
+        setLoading(false)
     }
 
     return (
