@@ -1,6 +1,6 @@
 import { clearAdminToken, getAdminToken } from "./auth";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "https://bycesaroliva.com/api";
 
 type RaffleProps = {
     IdRifa?: number;

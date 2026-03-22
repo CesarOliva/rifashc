@@ -61,6 +61,10 @@ const Hero = () => {
         if(!raffle?.Fecha) return
 
         const date = parseDate(raffle.Fecha)
+        if (isNaN(date.getTime())) {
+            setError("No hay rifa activa");
+            return;
+        }
 
         const interval = setInterval(()=>{
             setTime(getCountdown(date))

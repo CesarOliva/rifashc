@@ -56,7 +56,8 @@ const CreatePage = () => {
             return;
         }
 
-        const formatedDate = selectedDate.replaceAll('-', '') + ' ' + selectedTime+':00'
+        const formatedDate = `${selectedDate} ${selectedTime}:00`
+        console.log(formatedDate);
         const uploadedUrl = await imageSelectRef.current?.upload();
 
         if(!uploadedUrl){
@@ -65,6 +66,7 @@ const CreatePage = () => {
             return;
         }
         setImage(uploadedUrl);
+        console.log(image);
         
         const promise = createRaffle({
             Nombre: name,

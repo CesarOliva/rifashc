@@ -11,7 +11,6 @@ import {
     AlertDialogCancel,
     AlertDialogAction
 } from "./ui/alert-dialog"
-import { toast } from "sonner";
 
 interface RemoveDialogProps {
     onConfirm: () => Promise<void> | void;
