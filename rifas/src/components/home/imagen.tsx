@@ -36,7 +36,7 @@ const Imagen = () => {
 
     if(error || !raffle){
         return (
-            <div className="w-full h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
+            <div className="w-full h-[60vh] md:h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
                 style={{
                     backgroundImage: "url('/hero.jpg')"
                 }}
@@ -46,7 +46,7 @@ const Imagen = () => {
     }
 
     return (
-        <div className="w-full h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
+        <div className="w-full h-[60vh] md:h-[80vh] bg-neutral-700 overflow-hidden bg-cover bg-center flex items-end justify-center" 
             style={{
                 backgroundImage: `url(${raffle.Imagen})`
             }}

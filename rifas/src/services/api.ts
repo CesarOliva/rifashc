@@ -202,5 +202,6 @@ export const updatePayed = async (id: number) => {
         throw new Error(data.message || 'Error al actualizar el boleto');
     }
     
+    console.log(data)
     return data;
 }

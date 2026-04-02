@@ -138,7 +138,7 @@ export const CreditCard = ({
     company = "Untitled.",
     cardNumber = "1234 1234 1234 1234",
     cardHolder = "OLIVIA RHYE",
-    cardExpiration = "06/28",
+    cardExpiration = "",
     type = "brand-dark",
     className,
     width,
