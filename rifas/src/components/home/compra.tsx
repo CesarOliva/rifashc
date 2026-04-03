@@ -255,10 +255,10 @@ const CompraModal = ({onClose}: {
                                 <Carousel className="w-full max-w-full px-10">
                                     <CarouselContent className="w-full">
                                         <CarouselItem className="basis-full flex justify-center px-2">
-                                           <CreditCard type="gray-dark" cardHolder='Rifas HC' cardNumber='4169 1606 2129 7382' company='Bancoppel' width={280}/>
+                                           <CreditCard type="gray-dark" cardHolder='Ayvi Naomy Huerta' cardNumber='4169 1606 2129 7382' company='Bancoppel' width={280}/>
                                         </CarouselItem>
                                         <CarouselItem className="basis-full flex justify-center px-2">
-                                            <CreditCard type="gray-light" cardHolder='Rifas HC' cardNumber='5579 0890 0754 7493' company='Santander' width={280}/>
+                                            <CreditCard type="gray-light" cardHolder='Roberto Huerta Hinojosa' cardNumber='5579 0890 0754 7493' company='Santander' width={280}/>
                                         </CarouselItem>
                                     </CarouselContent>
                                     <CarouselPrevious className="left-2 text-black"/>
