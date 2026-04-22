@@ -1,19 +1,12 @@
 <?php
 
 function db(){
-    $env = "sqlite";
+    $host = "";
+    $db = "";
+    $user = "";
+    $pass = "";
 
-    if($env === "sqlite"){
-        $pdo = new PDO("sqlite:../database/rifas.sqlite");
-    }else{
-        //Credenciales de mysql
-        $host = "localhost";
-        $db = "rifas";
-        $user = "user";
-        $pass = "password";
-
-        $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8",$user,$pass);
-    }
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8",$user,$pass);
     
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 

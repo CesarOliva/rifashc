@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . "/../config/auth.php";
+require_once "/home4/cesaremi/config/auth.php";
 
 function getAuthorizationHeader(): ?string {
     if (function_exists("getallheaders")) {

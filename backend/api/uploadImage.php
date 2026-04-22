@@ -10,7 +10,7 @@ if($_SERVER["REQUEST_METHOD"] === "OPTIONS"){
     exit;
 }
 
-require "../lib/adminAuth.php";
+require "/home4/cesaremi/public_html/lib/adminAuth.php";
 
 require_admin();
 
@@ -88,7 +88,7 @@ if(!convertToWebP($tmp,$filepath)){
     exit;
 }
 
-$url = "http://".$_SERVER["HTTP_HOST"]."/uploads/".$filename;
+$url = "https://".$_SERVER["HTTP_HOST"]."/uploads/".$filename;
 
 echo json_encode([
     "success"=>true,

@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-require "../config/database.php";
+require "/home4/cesaremi/config/database.php";
 
 $pdo = db();
 

@@ -1,6 +1,6 @@
 <?php
 
-require "../config/database.php";
+require "/home4/cesaremi/config/database.php";
 
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");

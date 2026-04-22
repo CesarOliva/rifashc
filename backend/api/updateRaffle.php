@@ -5,8 +5,8 @@ header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
 
-require "../config/database.php";
-require "../lib/adminAuth.php";
+require "/home4/cesaremi/config/database.php";
+require "/home4/cesaremi/public_html/lib/adminAuth.php";
 
 require_admin();
 

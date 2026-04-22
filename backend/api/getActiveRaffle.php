@@ -1,9 +1,12 @@
 <?php
 
-require "../config/database.php";
+require "/home4/cesaremi/config/database.php";
 
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 try {
     $pdo = db();
@@ -11,7 +14,7 @@ try {
     $stmt = $pdo->query("
         SELECT *
         FROM rifas
-        WHERE Activa = true
+        WHERE Activa = 1
         ORDER BY IdRifa DESC
         LIMIT 1
     ");
