@@ -20,6 +20,8 @@ const CompraModal = ({onClose}: {
     const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
 
     const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+    const [showRandomInput, setShowRandomInput] = useState<boolean>(false);
+    const [randomQuantity, setRandomQuantity] = useState<number | ''>('');
     const [validated, setValidated] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
 
@@ -123,6 +125,63 @@ const CompraModal = ({onClose}: {
         );
     }
 
+    const getAvailableTickets = () => {
+        if (!raffle?.data?.CantidadBoletos) {
+            return [];
+        }
+
+        return Array.from(
+            { length: raffle.data.CantidadBoletos },
+            (_, i) => i + 1
+        ).filter((ticket) => !purchasedTickets.includes(ticket));
+    };
+
+    const openRandomInput = () => {
+        const availableTickets = getAvailableTickets();
+
+        if (availableTickets.length === 0) {
+            toast.error("No hay boletos disponibles");
+            return;
+        }
+
+        const defaultQuantity = Math.min(
+            selectedTickets.length > 0 ? selectedTickets.length : 1,
+            availableTickets.length
+        );
+        setRandomQuantity(defaultQuantity);
+        setShowRandomInput(true);
+    };
+
+    const handleRandomSelection = () => {
+        const availableTickets = getAvailableTickets();
+
+        if (availableTickets.length === 0) {
+            toast.error("No hay boletos disponibles");
+            return;
+        }
+
+        const ticketsToPick = Number(randomQuantity);
+        if (!Number.isInteger(ticketsToPick) || ticketsToPick <= 0) {
+            toast.error("Ingresa una cantidad valida");
+            return;
+        }
+
+        if (ticketsToPick > availableTickets.length) {
+            toast.error(`Solo hay ${availableTickets.length} boletos disponibles`);
+            return;
+        }
+
+        const shuffled = [...availableTickets];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        const randomTickets = shuffled.slice(0, ticketsToPick).sort((a, b) => a - b);
+        setSelectedTickets(randomTickets);
+        setShowRandomInput(false);
+    };
+
     if(loading){
          return(
             <div className="w-full h-[80vh] bg-gray-300 animate-pulse flex items-end justify-center">
@@ -177,9 +236,50 @@ const CompraModal = ({onClose}: {
                                 </button>
                             ))}
                         </div>
-                        <div className="flex justify-end p-6">
-                            <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg mr-2 cursor-pointer">Cancelar</button>
+                        {showRandomInput && (
+                            <div className="px-6">
+                                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-neutral-300 p-3">
+                                    <label htmlFor="randomQuantity" className="text-black font-medium">
+                                        Cantidad al azar:
+                                    </label>
+                                    <input
+                                        id="randomQuantity"
+                                        type="number"
+                                        min={1}
+                                        max={getAvailableTickets().length}
+                                        value={randomQuantity}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setRandomQuantity(value === '' ? '' : Number(value));
+                                        }}
+                                        className="w-24 rounded-md border border-neutral-300 px-2 py-1 text-black"
+                                    />
+                                    <p className="text-sm text-neutral-600">
+                                        Disponibles: {getAvailableTickets().length}
+                                    </p>
+                                    <button
+                                        onClick={handleRandomSelection}
+                                        className="bg-[#ff2a2a] text-white px-3 py-1 rounded-md hover:bg-[#ff6a00] cursor-pointer"
+                                    >
+                                        Generar
+                                    </button>
+                                    <button
+                                        onClick={() => setShowRandomInput(false)}
+                                        className="bg-neutral-200 text-black px-3 py-1 rounded-md hover:bg-neutral-300 cursor-pointer"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex flex-wrap justify-between items-center gap-2 p-6">
+                            <button onClick={openRandomInput} className="bg-neutral-700 hover:bg-neutral-600 text-white px-4 py-2 rounded-lg cursor-pointer">
+                                Elegir al azar
+                            </button>
+                            <div className="flex gap-2">
+                                <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg cursor-pointer">Cancelar</button>
                             <button onClick={handleFirstSubmit} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer disabled:cursor-not-allowed">Siguiente</button>
+                            </div>
                         </div>
                     </>
                 )}

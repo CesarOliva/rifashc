@@ -57,7 +57,6 @@ const CreatePage = () => {
         }
 
         const formatedDate = `${selectedDate} ${selectedTime}:00`
-        console.log(formatedDate);
         const uploadedUrl = await imageSelectRef.current?.upload();
 
         if(!uploadedUrl){

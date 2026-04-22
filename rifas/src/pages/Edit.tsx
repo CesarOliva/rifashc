@@ -183,7 +183,7 @@ const EditPage = () => {
             return;
         }
 
-        const formatedDate = selectedDate.replaceAll('-', '') + ' ' + selectedTime+':00'
+        const formatedDate = `${selectedDate} ${selectedTime}:00`
         const uploadedUrl = await imageSelectRef.current?.upload();
 
         if(!uploadedUrl){
