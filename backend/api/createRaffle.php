@@ -34,13 +34,14 @@ try{
     $stmt->execute();
     
     $stmt2 = $pdo->prepare("
-    INSERT INTO rifas (Nombre, Imagen, Fecha, PrecioBoleto, CantidadBoletos)
-    VALUES (:Nombre, :Imagen, :Fecha, :PrecioBoleto, :CantidadBoletos)
+    INSERT INTO rifas (Nombre, Imagen, Descripcion, Fecha, PrecioBoleto, CantidadBoletos)
+    VALUES (:Nombre, :Imagen, :Descripcion, :Fecha, :PrecioBoleto, :CantidadBoletos)
     ");
 
     $stmt2->execute([
         ":Nombre" => $data["Nombre"],
         ":Imagen" => $data["Imagen"],
+        ":Descripcion" => $data["Descripcion"] ?? '',
         ":Fecha" => $data["Fecha"],
         ":PrecioBoleto" => $data["PrecioBoleto"],
         ":CantidadBoletos" => $data["CantidadBoletos"]

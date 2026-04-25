@@ -113,6 +113,11 @@ const Hero = () => {
                     <p className="text-white 11ztext-lg font-normal text-center mb-4 mt-1">
                         Aún estas a tiempo para comprar tus boletos para nuestro siguiente sorteo<br/>
                         <span className="text-white text-xl font-bold">"{raffle.Nombre}"</span><br/>
+                        {raffle.Descripcion && (
+                            <span className="block max-w-2xl mx-auto mt-2 text-base font-normal text-neutral-100/90">
+                                {raffle.Descripcion}
+                            </span>
+                        )}
                         <span className="text-white text-xl font-bold">${raffle.PrecioBoleto}</span> por boleto
                     </p>
 

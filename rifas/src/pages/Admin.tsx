@@ -1,14 +1,18 @@
 import { CircleCheck, Pencil, Plus, X } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { formatearMoneda } from "../services/currencyFormat";
-import { getAllRaffles, removeRaffle, updateActive } from "../services/api";
-import { useEffect, useState } from "react";
+import { createPrizeImage, getAllRaffles, getPrizeImages, removePrizeImage, removeRaffle, updateActive } from "../services/api";
+import { useEffect, useRef, useState } from "react";
 import RemoveDialog from "../components/AlertDialog";
 import { toast } from "sonner";
 import { clearAdminToken } from "../services/auth";
+import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
 
 const AdminPage = () => {
     const [raffles, setRaffles] = useState([]);
+    const [prizeImages, setPrizeImages] = useState<any[]>([]);
+    const [loadingPrizeImage, setLoadingPrizeImage] = useState(false);
+    const imageSelectRef = useRef<ImageSelectHandle>(null);
 
     const navigate = useNavigate();
 
@@ -25,9 +29,60 @@ const AdminPage = () => {
         setRaffles(response.data || []);
     };
 
+    const fetchPrizeImages = async () => {
+        const response = await getPrizeImages();
+        setPrizeImages(response.data || []);
+    };
+
     useEffect(() => {
         fetchRaffles();
+        fetchPrizeImages();
     }, []);
+
+    const handleAddPrizeImage = async () => {
+        setLoadingPrizeImage(true);
+
+        const uploadedUrl = await imageSelectRef.current?.upload();
+
+        if (!uploadedUrl) {
+            setLoadingPrizeImage(false);
+            return;
+        }
+
+        const promise = createPrizeImage({ Imagen: uploadedUrl });
+
+        toast.promise(promise, {
+            loading: "Guardando imagen...",
+            success: "Imagen agregada con exito!",
+            error: "Error al agregar imagen"
+        });
+
+        promise
+            .then((data) => {
+                if (data.success) {
+                    fetchPrizeImages();
+                }
+            })
+            .finally(() => {
+                setLoadingPrizeImage(false);
+            });
+    }
+
+    const handleRemovePrizeImage = (id: number) => {
+        const promise = removePrizeImage(id);
+
+        toast.promise(promise, {
+            loading: "Eliminando imagen...",
+            success: "Imagen eliminada",
+            error: "Error al eliminar imagen"
+        });
+
+        promise.then((data) => {
+            if (data.success) {
+                fetchPrizeImages();
+            }
+        });
+    }
 
     const changeActive = (id: number) => {
         const promise = updateActive(id);
@@ -136,6 +191,52 @@ const AdminPage = () => {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                    <div className="bg-white rounded-xl shadow overflow-hidden p-6">
+                        <div className="mb-6">
+                            <h3 className="text-black text-xl font-semibold">Imagenes de Proximos Ganadores</h3>
+                            <p className="text-neutral-600">Estas imagenes son independientes de las rifas.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="w-full">
+                                <ImageSelect ref={imageSelectRef} />
+                                <button
+                                    onClick={handleAddPrizeImage}
+                                    disabled={loadingPrizeImage}
+                                    className="mt-4 px-4 py-2 text-black cursor-pointer rounded-lg bg-neutral-200 hover:bg-neutral-300 font-medium disabled:cursor-not-allowed disabled:opacity-70"
+                                >
+                                    Agregar Imagen
+                                </button>
+                            </div>
+
+                            <div>
+                                <h4 className="text-black text-lg font-semibold mb-3">Imagenes actuales</h4>
+                                {prizeImages.length === 0 ? (
+                                    <p className="text-neutral-600">Aun no hay imagenes cargadas.</p>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-3 max-h-120 overflow-auto pr-1">
+                                        {prizeImages.map(({ IdPremioImagen, Imagen }) => (
+                                            <div key={IdPremioImagen} className="relative rounded-lg overflow-hidden border border-neutral-200 group">
+                                                <img src={Imagen} alt="Premio" className="w-full h-36 object-cover" />
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                                                        <RemoveDialog
+                                                            onConfirm={() => handleRemovePrizeImage(IdPremioImagen)}
+                                                            title="Eliminar imagen"
+                                                            description="Esta imagen ya no se mostrara en la seccion de proximos ganadores."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

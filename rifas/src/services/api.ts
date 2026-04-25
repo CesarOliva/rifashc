@@ -6,10 +6,17 @@ type RaffleProps = {
     IdRifa?: number;
     Nombre: string;
     Imagen: string;
+    Descripcion?: string;
     Fecha: string;
     PrecioBoleto: number;
     CantidadBoletos: number;
     Activa?: Boolean;
+}
+
+type PrizeImageProps = {
+    IdPremioImagen?: number;
+    Imagen: string;
+    FechaCreacion?: string;
 }
 
 const getAuthHeaders = (): Record<string, string> => {
@@ -37,6 +44,7 @@ export const createRaffle = async (raffle: RaffleProps) => {
         body: JSON.stringify({
             Nombre: raffle.Nombre,
             Imagen: raffle.Imagen,
+            Descripcion: raffle.Descripcion ?? '',
             Fecha: raffle.Fecha,
             PrecioBoleto: raffle.PrecioBoleto,
             CantidadBoletos: raffle.CantidadBoletos,
@@ -78,6 +86,7 @@ export const updateRaffle = async (raffle: RaffleProps) => {
             IdRifa: raffle.IdRifa,
             Nombre: raffle.Nombre,
             Imagen: raffle.Imagen,
+            Descripcion: raffle.Descripcion ?? '',
             Fecha: raffle.Fecha,
             PrecioBoleto: raffle.PrecioBoleto,
             CantidadBoletos: raffle.CantidadBoletos,
@@ -204,4 +213,42 @@ export const updatePayed = async (id: number) => {
     
     console.log(data)
     return data;
+}
+
+export const getPrizeImages = async () => {
+    const res = await fetch(`${API_URL}/getPrizeImages.php`, {
+        method: "GET"
+    });
+
+    return await res.json();
+}
+
+export const createPrizeImage = async (image: PrizeImageProps) => {
+    const res = await fetch(`${API_URL}/createPrizeImage.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            Imagen: image.Imagen
+        })
+    });
+
+    return await handleJsonResponse(res);
+}
+
+export const removePrizeImage = async (id: number) => {
+    const res = await fetch(`${API_URL}/removePrizeImage.php`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdPremioImagen: id
+        })
+    });
+
+    return await handleJsonResponse(res);
 }

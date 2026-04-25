@@ -30,6 +30,7 @@ try{
         SET
             Nombre = :Nombre,
             Imagen = :Imagen,
+            Descripcion = :Descripcion,
             Fecha = :Fecha,
             PrecioBoleto = :PrecioBoleto,
             CantidadBoletos = :CantidadBoletos
@@ -40,6 +41,7 @@ try{
         ":IdRifa" => $data["IdRifa"],
         ":Nombre" => $data["Nombre"],
         ":Imagen" => $data["Imagen"],
+        ":Descripcion" => $data["Descripcion"] ?? '',
         ":Fecha" => $data["Fecha"],
         ":PrecioBoleto" => $data["PrecioBoleto"],
         ":CantidadBoletos" => $data["CantidadBoletos"],

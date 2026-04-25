@@ -216,6 +216,11 @@ const CompraModal = ({onClose}: {
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">
                             <h2 className="text-white text-2xl font-semibold">Comprar Boletos</h2>
                             <p className="text-lg text-neutral-300">{raffle.data.Nombre}</p>
+                            {raffle.data.Descripcion && (
+                                <p className="mt-2 text-sm leading-relaxed text-neutral-400">
+                                    {raffle.data.Descripcion}
+                                </p>
+                            )}
                         </div>
                         <div className="grid grid-cols-7 md:grid-cols-10 gap-2 p-6 max-h-[50vh] overflow-y-auto">
                             {Array.from({ length: raffle.data.CantidadBoletos }, (_, i) => i + 1).map((num) => (

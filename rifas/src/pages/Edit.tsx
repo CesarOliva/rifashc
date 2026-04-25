@@ -40,6 +40,7 @@ const EditPage = () => {
 
     const [name, setName] = useState<string>('');
     const [image, setImage] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
     const [price, setPrice] = useState<number | undefined>(undefined);
     const [amount, setAmount] = useState<number | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string>('');
@@ -132,6 +133,7 @@ const EditPage = () => {
         if(raffle){
             setName(raffle.Nombre ?? '');
             setImage(raffle.Imagen ?? '');
+            setDescription(raffle.Descripcion ?? '');
             setPrice(raffle.PrecioBoleto ?? undefined);
             setAmount(raffle.CantidadBoletos ?? undefined);
             if (raffle.Fecha) {
@@ -196,6 +198,7 @@ const EditPage = () => {
             IdRifa: Number(IdRifa?.split('-')[1]),
             Nombre: name,
             Imagen: uploadedUrl,
+            Descripcion: description,
             Fecha: formatedDate,
             PrecioBoleto: price ? price : 0,
             CantidadBoletos: amount ? amount : 0,
@@ -255,6 +258,14 @@ const EditPage = () => {
                             onChange={(e)=>setName(e.target.value)}
                             className='text-[30px] text-white placeholder:text-neutral-300 font-semibold focus:outline-none w-full max-w-215 rounded-md'
                             placeholder="Nombre"
+                        />
+                        <textarea
+                            id="descripcion"
+                            name="descripcion"
+                            value={description}
+                            onChange={(e)=>setDescription(e.target.value)}
+                            className='text-lg text-white placeholder:text-neutral-300 font-normal focus:outline-none w-full min-h-24 resize-y rounded-md bg-transparent border border-white/20 px-3 py-2'
+                            placeholder="Descripción"
                         />
                         <input
                             type="number"

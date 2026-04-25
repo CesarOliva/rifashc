@@ -1,0 +1,49 @@
+<?php
+
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Content-Type: application/json");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+require "/home4/cesaremi/config/database.php";
+require "/home4/cesaremi/public_html/lib/adminAuth.php";
+
+require_admin();
+
+$pdo = db();
+
+$data = json_decode(file_get_contents("php://input"), true);
+
+if(!$data || empty($data["IdPremioImagen"])){
+    echo json_encode([
+        "success" => false,
+        "message" => "Datos invalidos"
+    ]);
+    exit;
+}
+
+try{
+    $stmt = $pdo->prepare("
+        DELETE FROM premios_imagenes
+        WHERE IdPremioImagen = :IdPremioImagen
+    ");
+
+    $stmt->execute([
+        ":IdPremioImagen" => $data["IdPremioImagen"],
+    ]);
+
+    echo json_encode([
+        "success" => true,
+        "message" => "Imagen eliminada"
+    ]);
+} catch(PDOException $e){
+    echo json_encode([
+        "success" => false,
+        "message" => "Fallo al eliminar la imagen"
+    ]);
+}
