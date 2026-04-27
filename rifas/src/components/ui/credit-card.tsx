@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cx, sortCx } from "../../lib/utils/cx";
 import { MastercardIcon, MastercardIconWhite, PaypassIcon } from "./icons";
 
@@ -117,6 +117,7 @@ interface CreditCardProps {
     type?: CreditCardType;
     className?: string;
     width?: number;
+    widthSm?: number;
 }
 
 const calculateScale = (desiredWidth: number, originalWidth: number, originalHeight: number) => {
@@ -142,20 +143,43 @@ export const CreditCard = ({
     type = "brand-dark",
     className,
     width,
+    widthSm,
 }: CreditCardProps) => {
     const originalWidth = 316;
     const originalHeight = 190;
+    const [isMd, setIsMd] = useState<boolean>(false);
+
+    useEffect(() => {
+        const updateBreakpoint = () => {
+            setIsMd(window.innerWidth >= 768);
+        };
+
+        updateBreakpoint();
+        window.addEventListener("resize", updateBreakpoint);
+
+        return () => {
+            window.removeEventListener("resize", updateBreakpoint);
+        };
+    }, []);
+
+    const effectiveWidth = useMemo(() => {
+        if (!width) return undefined;
+        if (isMd) return width;
+        if (widthSm) return widthSm;
+
+        return Math.max(180, Math.round(width * 0.82));
+    }, [isMd, width, widthSm]);
 
     const { scale, scaledWidth, scaledHeight } = useMemo(() => {
-        if (!width)
+        if (!effectiveWidth)
             return {
                 scale: 1,
                 scaledWidth: originalWidth,
                 scaledHeight: originalHeight,
             };
 
-        return calculateScale(width, originalWidth, originalHeight);
-    }, [width]);
+        return calculateScale(effectiveWidth, originalWidth, originalHeight);
+    }, [effectiveWidth]);
 
     return (
         <div

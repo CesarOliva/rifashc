@@ -198,7 +198,7 @@ const AdminPage = () => {
                 <div className="lg:col-span-2">
                     <div className="bg-white rounded-xl shadow overflow-hidden p-6">
                         <div className="mb-6">
-                            <h3 className="text-black text-xl font-semibold">Imagenes de Proximos Ganadores</h3>
+                            <h3 className="text-black text-xl font-semibold">Lo que puedes ganar:</h3>
                             <p className="text-neutral-600">Estas imagenes son independientes de las rifas.</p>
                         </div>
 

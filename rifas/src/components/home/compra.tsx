@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { CreditCard } from "../ui/credit-card";
 import { buyTickets, getActiveRaffle, getTicketsByRaffle } from "../../services/api";
@@ -19,8 +19,13 @@ const CompraModal = ({onClose}: {
     const [error, setError] = useState<string | null>(null);
     const [purchasedTickets, setPurchasedTickets] = useState<number[]>([]);
 
-    const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
+    const [paidSelectedTickets, setPaidSelectedTickets] = useState<number[]>([]);
+    const [freeSelectedTickets, setFreeSelectedTickets] = useState<number[]>([]);
     const [showRandomInput, setShowRandomInput] = useState<boolean>(false);
+    const [showRandomResultModal, setShowRandomResultModal] = useState<boolean>(false);
+    const [isGeneratingRandom, setIsGeneratingRandom] = useState<boolean>(false);
+    const [generatedRandomTickets, setGeneratedRandomTickets] = useState<number[]>([]);
+    const randomGenerationTimeoutRef = useRef<number | null>(null);
     const [randomQuantity, setRandomQuantity] = useState<number | ''>('');
     const [validated, setValidated] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -29,6 +34,11 @@ const CompraModal = ({onClose}: {
         nombre: '',
         telefono: 0,
     });
+
+    const allSelectedTickets = useMemo(
+        () => [...paidSelectedTickets, ...freeSelectedTickets].sort((a, b) => a - b),
+        [paidSelectedTickets, freeSelectedTickets],
+    );
 
     useEffect(()=>{
         const loadRaffle = async ()=> {
@@ -59,7 +69,7 @@ const CompraModal = ({onClose}: {
     const handleFirstSubmit = (e: any) => {
         e.preventDefault();
 
-        if(selectedTickets.length <= 0){
+        if(paidSelectedTickets.length <= 0){
             setValidated(false)
             toast.error('Selecciona uno o mas boletos')
             return;
@@ -87,7 +97,7 @@ const CompraModal = ({onClose}: {
 
     const handlePay = ()=>{
         setDisabled(true);
-        const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, selectedTickets);
+        const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, allSelectedTickets);
 
         toast.promise(promise, {
             loading: 'Comprando...',
@@ -115,15 +125,26 @@ const CompraModal = ({onClose}: {
     };
 
     const toggleTicket = (num: number)=> {
-        if(purchasedTickets.includes(num)){
+        if(purchasedTickets.includes(num) || freeSelectedTickets.includes(num)){
             return;
         }
-        setSelectedTickets((prev)=>
+        setPaidSelectedTickets((prev)=>
             prev.includes(num)
                 ? prev.filter((t) => t !== num)
                 : [...prev, num]
         );
     }
+
+    const getRandomSubset = (pool: number[], quantity: number) => {
+        const shuffled = [...pool];
+
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        return shuffled.slice(0, quantity).sort((a, b) => a - b);
+    };
 
     const getAvailableTickets = () => {
         if (!raffle?.data?.CantidadBoletos) {
@@ -136,6 +157,19 @@ const CompraModal = ({onClose}: {
         ).filter((ticket) => !purchasedTickets.includes(ticket));
     };
 
+    useEffect(() => {
+        if (!raffle?.data?.CantidadBoletos || paidSelectedTickets.length === 0) {
+            setFreeSelectedTickets([]);
+            return;
+        }
+
+        const freePool = getAvailableTickets().filter((ticket) => !paidSelectedTickets.includes(ticket));
+        const freeCount = Math.min(paidSelectedTickets.length, freePool.length);
+        const nextFreeTickets = getRandomSubset(freePool, freeCount);
+
+        setFreeSelectedTickets(nextFreeTickets);
+    }, [paidSelectedTickets, purchasedTickets, raffle?.data?.CantidadBoletos]);
+
     const openRandomInput = () => {
         const availableTickets = getAvailableTickets();
 
@@ -145,7 +179,7 @@ const CompraModal = ({onClose}: {
         }
 
         const defaultQuantity = Math.min(
-            selectedTickets.length > 0 ? selectedTickets.length : 1,
+            paidSelectedTickets.length > 0 ? paidSelectedTickets.length : 1,
             availableTickets.length
         );
         setRandomQuantity(defaultQuantity);
@@ -171,16 +205,48 @@ const CompraModal = ({onClose}: {
             return;
         }
 
-        const shuffled = [...availableTickets];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        const randomTickets = getRandomSubset(availableTickets, ticketsToPick);
+        setShowRandomInput(false);
+        setShowRandomResultModal(true);
+        setIsGeneratingRandom(true);
+        setGeneratedRandomTickets([]);
+
+        if (randomGenerationTimeoutRef.current) {
+            window.clearTimeout(randomGenerationTimeoutRef.current);
         }
 
-        const randomTickets = shuffled.slice(0, ticketsToPick).sort((a, b) => a - b);
-        setSelectedTickets(randomTickets);
-        setShowRandomInput(false);
+        randomGenerationTimeoutRef.current = window.setTimeout(() => {
+            setPaidSelectedTickets(randomTickets);
+            setGeneratedRandomTickets(randomTickets);
+            setIsGeneratingRandom(false);
+            randomGenerationTimeoutRef.current = null;
+        }, 1400);
     };
+
+    const closeRandomResultModal = () => {
+        if (randomGenerationTimeoutRef.current) {
+            window.clearTimeout(randomGenerationTimeoutRef.current);
+            randomGenerationTimeoutRef.current = null;
+        }
+
+        setShowRandomResultModal(false);
+        setIsGeneratingRandom(false);
+        setGeneratedRandomTickets([]);
+    }
+
+    const handleUseRandomTickets = () => {
+        closeRandomResultModal();
+        setValidated(true);
+        setCurrentStep(2);
+    }
+
+    useEffect(() => {
+        return () => {
+            if (randomGenerationTimeoutRef.current) {
+                window.clearTimeout(randomGenerationTimeoutRef.current);
+            }
+        }
+    }, []);
 
     if(loading){
          return(
@@ -227,12 +293,14 @@ const CompraModal = ({onClose}: {
                                 <button 
                                     key={num}
                                     onClick={() => toggleTicket(num)}
-                                    disabled={purchasedTickets.includes(num)}
+                                    disabled={purchasedTickets.includes(num) || freeSelectedTickets.includes(num)}
                                     className={`rounded-lg p-2 text-white cursor-pointer disabled:cursor-not-allowed
                                         ${purchasedTickets.includes(num)
                                             ? 'bg-[#ff2a2a] disabled:opacity-75'
-                                            : selectedTickets.includes(num)
+                                            : paidSelectedTickets.includes(num)
                                             ? 'bg-green-600'
+                                            : freeSelectedTickets.includes(num)
+                                            ? 'bg-amber-500 disabled:opacity-85'
                                             : 'bg-neutral-700 hover:bg-neutral-600'
                                         }
                                     `}
@@ -342,35 +410,53 @@ const CompraModal = ({onClose}: {
                         <div className="flex flex-col items-center px-6 space-y-4">
                             <div className="flex flex-col w-full">
                                 <h2 className="block text-xl text-neutral-800 font-semibold mb-2">Resumen de compra</h2>
-                                <div className="flex">
-                                    <p className="text-md text-black font-medium">Boletos seleccionados:</p>
-                                    <div className="flex gap-1 ml-1 flex-wrap">
-                                        {selectedTickets.map((ticket) => (
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-md text-black font-medium">Boletos seleccionados (pagados):</p>
+                                    <div className="max-h-28 overflow-y-auto rounded-md border border-neutral-200 p-2">
+                                        <div className="flex gap-1 flex-wrap">
+                                        {paidSelectedTickets.map((ticket) => (
                                             <span key={ticket} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                                                 #{ticket}
                                             </span>
                                             ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <p className="text-md text-black font-medium">Boletos gratis:</p>
+                                    <div className="max-h-20 overflow-y-auto rounded-md border border-amber-200 bg-amber-50 p-2">
+                                        <div className="flex gap-1 flex-wrap">
+                                            {freeSelectedTickets.length > 0 ? (
+                                                freeSelectedTickets.map((ticket) => (
+                                                    <span key={ticket} className="flex items-center bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-sm">
+                                                        #{ticket}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-amber-900">No hay boletos gratis disponibles.</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex">
-                                    <p className="text-md text-black font-medium">Total: <span className="font-normal">{formatearMoneda(selectedTickets.length * raffle.data.PrecioBoleto)}</span></p>
+                                    <p className="text-md text-black font-medium">Total a pagar: <span className="font-normal">{formatearMoneda(paidSelectedTickets.length * raffle.data.PrecioBoleto)}</span></p>
                                 </div>
                             </div>
                             <div className="flex justify-center items-center w-full overflow-hidden">
                                 <Carousel className="w-full max-w-full px-10">
                                     <CarouselContent className="w-full">
                                         <CarouselItem className="basis-full flex justify-center px-2">
-                                           <CreditCard type="gray-dark" cardHolder='Ayvi Naomy Huerta' cardNumber='4169 1606 2129 7382' company='Bancoppel' width={280}/>
+                                           <CreditCard type="gray-dark" cardHolder='Ayvi Naomy Huerta' cardNumber='4169 1606 2129 7382' company='Bancoppel' width={280} widthSm={220}/>
                                         </CarouselItem>
                                         <CarouselItem className="basis-full flex justify-center px-2">
-                                            <CreditCard type="gray-light" cardHolder='Roberto Huerta Hinojosa' cardNumber='5579 0890 0754 7493' company='Santander' width={280}/>
+                                            <CreditCard type="gray-light" cardHolder='Roberto Huerta Hinojosa' cardNumber='5579 0890 0754 7493' company='Santander' width={280} widthSm={220}/>
                                         </CarouselItem>
                                     </CarouselContent>
                                     <CarouselPrevious className="left-2 text-black"/>
                                     <CarouselNext className="right-2 text-black"/>
                                 </Carousel>
                             </div>
-                            <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/+528673096867">+52 86 7309 6867</a> junto con tu nombre y boletos seleccionados</p>
+                            <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/+528673096867">+52 86 7309 6867</a> junto con tu nombre y tus boletos pagados y gratis.</p>
                         </div>
                         
                         <div className="flex justify-end flex-wrap gap-2 p-6">
@@ -381,6 +467,48 @@ const CompraModal = ({onClose}: {
                     </>
                 )}
             </div>
+
+            {showRandomResultModal && (
+                <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-white rounded-xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+                        {isGeneratingRandom ? (
+                            <div className="flex flex-col items-center justify-center py-8">
+                                <img src="/jackpot.gif" alt="Generando boletos" className="size-64 object-contain" />
+                                <p className="mt-4 text-xl font-semibold text-neutral-900">Generando boletos al azar...</p>
+                                <p className="text-sm text-neutral-600 mt-1">Esto solo toma un momento</p>
+                            </div>
+                        ) : (
+                            <div>
+                                <h3 className="text-2xl font-semibold text-black">Boletos generados</h3>
+                                <p className="text-neutral-600 mt-1">Estos son tus números seleccionados al azar:</p>
+
+                                <div className="mt-5 flex flex-wrap gap-2 max-h-48 overflow-auto">
+                                    {generatedRandomTickets.map((ticket) => (
+                                        <span key={ticket} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                            #{ticket}
+                                        </span>
+                                    ))}
+                                </div>
+
+                                <div className="mt-6 flex justify-end">
+                                    <button
+                                        onClick={closeRandomResultModal}
+                                        className="bg-neutral-200 text-black px-4 py-2 rounded-lg hover:bg-neutral-300 transition duration-300 cursor-pointer mr-2"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <button
+                                        onClick={handleUseRandomTickets}
+                                        className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer"
+                                    >
+                                        Usar estos boletos
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

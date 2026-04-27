@@ -252,3 +252,44 @@ export const removePrizeImage = async (id: number) => {
 
     return await handleJsonResponse(res);
 }
+
+export const startRaffle = async (id: number) => {
+    const res = await fetch(`${API_URL}/startRaffle.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdRifa: id
+        })
+    });
+
+    return await handleJsonResponse(res);
+}
+
+export const getRaffleWinner = async (id: number) => {
+    const res = await fetch(`${API_URL}/getRaffleWinner.php?IdRifa=${id}`, {
+        method: "GET",
+        headers: {
+            ...getAuthHeaders()
+        }
+    });
+
+    return await handleJsonResponse(res);
+}
+
+export const removeRaffleWinner = async (id: number) => {
+    const res = await fetch(`${API_URL}/removeRaffleWinner.php`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdRifa: id
+        })
+    });
+
+    return await handleJsonResponse(res);
+}

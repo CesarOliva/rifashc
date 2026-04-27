@@ -35,7 +35,7 @@ const Premios = () => {
 
     return (
         <div className="flex flex-col w-[90%] max-w-300 pb-8">
-            <h2 className="text-center text-3xl text-white font-semibold my-6">PROXIMOS GANADORES</h2>
+            <h2 className="text-center text-3xl text-white font-semibold my-6">LO QUE PUEDES GANAR:</h2>
             <div className="bg-white rounded-xl p-4 md:p-8">
                 <Carousel
                     plugins={[

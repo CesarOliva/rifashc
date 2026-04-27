@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { getRaffleById, getTicketsByRaffle, removeTicket, updatePayed, updateRaffle } from "../services/api";
+import { getRaffleById, getRaffleWinner, getTicketsByRaffle, removeRaffleWinner, removeTicket, startRaffle, updatePayed, updateRaffle } from "../services/api";
 import { parseDate } from "../services/parseDate";
 import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
 import { toast } from "sonner";
@@ -27,6 +27,13 @@ const EditPage = () => {
                     if(ticketsData.data && Array.isArray(ticketsData.data)){
                         syncTicketStatus(ticketsData.data);
                     }
+
+                    const winnerData = await getRaffleWinner(data.data.IdRifa);
+                    if (winnerData?.success) {
+                        setWinner(winnerData.data);
+                    } else {
+                        setWinner(null);
+                    }
                 }
             } catch(err){
                 setError("Error al conectar con el servidor");
@@ -50,7 +57,8 @@ const EditPage = () => {
     const [tickets, setTickets] = useState<any[]>([]);
     const [paidTickets, setPaidTickets] = useState<number[]>([]);
     const [unpaidTickets, setUnpaidTickets] = useState<number[]>([]);
-    const [selectedTicket, setSelectedTicket] = useState<number | null>(null);
+    const [winner, setWinner] = useState<any>(null);
+    const [drawingWinner, setDrawingWinner] = useState<boolean>(false);
 
     const syncTicketStatus = (ticketList: any[]) => {
         const paid: number[] = [];
@@ -127,6 +135,47 @@ const EditPage = () => {
                 loadTickets(raffle.IdRifa);
             })
         }
+    }
+
+    const handleStartRaffle = async () => {
+        if (!raffle?.IdRifa) return;
+
+        setDrawingWinner(true);
+        const promise = startRaffle(raffle.IdRifa);
+
+        toast.promise(promise, {
+            loading: "Iniciando rifa...",
+            success: "Ganador generado!",
+            error: (err) => err?.message || "No se pudo generar ganador"
+        });
+
+        promise
+            .then((data) => {
+                if (data?.success) {
+                    setWinner(data.data);
+                }
+            })
+            .finally(() => {
+                setDrawingWinner(false);
+            });
+    }
+
+    const handleRemoveWinner = async () => {
+        if (!raffle?.IdRifa) return;
+
+        const promise = removeRaffleWinner(raffle.IdRifa);
+
+        toast.promise(promise, {
+            loading: "Eliminando ganador...",
+            success: "Ganador eliminado",
+            error: "No se pudo eliminar ganador"
+        });
+
+        promise.then((data) => {
+            if (data?.success) {
+                setWinner(null);
+            }
+        });
     }
 
     useEffect(()=>{
@@ -318,7 +367,34 @@ const EditPage = () => {
                 <h2 className="text-2xl font-bold text-white text-center">Boletos Comprados</h2>
 
                 <div className="w-full flex flex-col justify-center items-center gap-y-6">
-                    <div className="w-full max-w-2xl flex flex-col md:ml-6 gap-y-3">
+                    <div className="w-full max-w-2xl flex justify-center">
+                        <button
+                            disabled={drawingWinner}
+                            onClick={handleStartRaffle}
+                            className="bg-[#f6d061] hover:bg-[#f5c946] font-semibold text-black h-11 px-5 rounded-lg transition-colors duration-300 disabled:opacity-70 disabled:cursor-not-allowed  cursor-pointer"
+                        >
+                            {drawingWinner ? "Sorteando..." : "Iniciar rifa"}
+                        </button>
+                    </div>
+
+                    {winner && (
+                        <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-700 rounded-lg p-4">
+                            <div className="mb-2 flex items-center justify-between gap-3">
+                                <h3 className="text-xl font-bold text-[#f6d061]">Ganador</h3>
+                                <button
+                                    onClick={handleRemoveWinner}
+                                    className="bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded-md transition-colors cursor-pointer"
+                                >
+                                    Volver a sortear
+                                </button>
+                            </div>
+                            <p className="text-white">Boleto: #{winner.Numero}</p>
+                            <p className="text-white">Nombre: {winner.Nombre}</p>
+                            <p className="text-white">Teléfono: {winner.Telefono}</p>
+                        </div>
+                    )}
+
+                    <div className="w-full max-w-2xl flex flex-col md:ml-6 gap-y-3 max-h-120 overflow-y-scroll">
                         <div className="grid grid-cols-7 md:grid-cols-10 gap-2">
                             {Array.from({ length: amount! }, (_, i) => i + 1).map((num) => (
                                 <button 
@@ -331,7 +407,6 @@ const EditPage = () => {
                                                 : 'bg-neutral-700 hover:bg-neutral-600'
                                         }
                                     `}
-                                    onClick={()=>{setSelectedTicket(num)}}
                                 >
                                     {num}
                                 </button>
@@ -339,48 +414,41 @@ const EditPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:ml-6 gap-y-3 w-full overflow-auto">
-                        {selectedTicket !== null && (
-                            <table className="min-w-full bg-neutral-800 rounded-lg text-left">
-                                <thead>
-                                    <tr>
-                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Número</th>
-                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Comprador</th>
-                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Teléfono</th>
-                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Pagado</th>
-                                        <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Eliminar</th>
+                    <div className="flex flex-col md:ml-6 gap-y-3 w-full max-h-120 overflow-auto">
+                        <table className="min-w-full bg-neutral-800 rounded-lg text-left">
+                            <thead>
+                                <tr>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Número</th>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Comprador</th>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Teléfono</th>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Pagado</th>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tickets.map((ticket) => (
+                                    <tr key={ticket.IdBoleto} className="">
+                                        <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Numero}</td>
+                                        <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Nombre}</td>
+                                        <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Telefono}</td>
+                                        <td className="py-2 px-4 border-b border-gray-300 text-black">
+                                            {ticket.Pagado ? (
+                                                <CircleCheck onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-green-100 rounded-full text-sm"/>
+                                            ): (
+                                                <X onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-red-100 rounded-full text-sm"/>
+                                            )}
+                                        </td>
+                                        <td className="py-2 px-4 border-b border-gray-300 text-gray-300">
+                                            <div className="w-fit cursor-pointer p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                                <RemoveDialog 
+                                                    onConfirm={() => deleteTicket(ticket.IdBoleto)}
+                                                />
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {tickets.map((ticket) => {
-                                        if(ticket.Numero === selectedTicket){
-                                            return (
-                                                <tr key={ticket.IdBoleto} className="">
-                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Numero}</td>
-                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Nombre}</td>
-                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Telefono}</td>
-                                                    <td className="py-2 px-4 border-b border-gray-300 text-black">
-                                                        {ticket.Pagado ? (
-                                                            <CircleCheck onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-green-100 rounded-full text-sm"/>
-                                                        ): (
-                                                            <X onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-red-100 rounded-full text-sm"/>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">
-                                                        <div className="w-fit cursor-pointer p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                                                            <RemoveDialog 
-                                                                onConfirm={() => deleteTicket(ticket.IdBoleto)}
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        }
-                                        return null;
-                                    })}
-                                </tbody>
-                            </table>
-                        )}
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
