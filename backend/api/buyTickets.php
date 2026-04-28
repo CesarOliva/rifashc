@@ -11,8 +11,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require "/home4/cesaremi/config/database.php";
+require "/home4/cesaremi/config/notifications.php";
 
 $pdo = db();
+
+function get_mail_from_header(): string {
+    $fromEmail = defined("MAIL_FROM_EMAIL") ? trim(MAIL_FROM_EMAIL) : "";
+    $fromName = defined("MAIL_FROM_NAME") ? trim(MAIL_FROM_NAME) : "Rifas HC";
+
+    if ($fromEmail === "") {
+        return "";
+    }
+
+    return sprintf("From: %s <%s>", $fromName, $fromEmail);
+}
+
+function send_client_reservation_email(array $data, array $paidNumbers, array $freeNumbers, array $raffle): bool {
+    if (!defined("CLIENT_NOTIFICATION_EMAIL")) {
+        return false;
+    }
+
+    $to = trim(CLIENT_NOTIFICATION_EMAIL);
+    if ($to === "") {
+        return false;
+    }
+
+    $raffleName = $raffle["Nombre"] ?? "Rifa";
+    $price = (float)($raffle["PrecioBoleto"] ?? 0);
+    $total = $price * count($paidNumbers);
+
+    $subject = sprintf("Apartado nuevo: %s", $raffleName);
+    $body = implode("\n", [
+        "Se registraron boletos apartados.",
+        "",
+        "Rifa: " . $raffleName,
+        "Cliente comprador: " . $data["Nombre"],
+        "Telefono comprador: " . $data["Telefono"],
+        "Boletos pagados: " . (count($paidNumbers) ? implode(", ", $paidNumbers) : "Ninguno"),
+        "Boletos gratis: " . (count($freeNumbers) ? implode(", ", $freeNumbers) : "Ninguno"),
+        "Cantidad de boletos: " . (count($paidNumbers) + count($freeNumbers)),
+        "Importe estimado: $" . number_format($total, 2, ".", ","),
+        "Fecha: " . date("Y-m-d H:i:s"),
+    ]);
+
+    $headers = ["Content-Type: text/plain; charset=UTF-8"];
+    $fromHeader = get_mail_from_header();
+    if ($fromHeader !== "") {
+        $headers[] = $fromHeader;
+    }
+
+    return @mail($to, $subject, $body, implode("\r\n", $headers));
+}
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -24,20 +73,32 @@ if(!$data){
     exit;
 }
 
-$numbers = [];
-if (isset($data["Numeros"]) && is_array($data["Numeros"])) {
-    $numbers = $data["Numeros"];
+$paidNumbers = [];
+$freeNumbers = [];
+
+if (isset($data["NumerosPagados"]) && is_array($data["NumerosPagados"])) {
+    $paidNumbers = $data["NumerosPagados"];
+} elseif (isset($data["Numeros"]) && is_array($data["Numeros"])) {
+    // Backwards compatibility: treat all as paid if Numeros provided
+    $paidNumbers = $data["Numeros"];
 } elseif (isset($data["Numero"])) {
-    $numbers = [$data["Numero"]];
+    $paidNumbers = [$data["Numero"]];
 }
 
-$numbers = array_values(array_unique(array_map("intval", $numbers)));
+if (isset($data["NumerosGratis"]) && is_array($data["NumerosGratis"])) {
+    $freeNumbers = $data["NumerosGratis"];
+}
+
+$paidNumbers = array_values(array_unique(array_map("intval", $paidNumbers)));
+$freeNumbers = array_values(array_unique(array_map("intval", $freeNumbers)));
+
+$allNumbers = array_values(array_unique(array_merge($paidNumbers, $freeNumbers)));
 
 if (
     !isset($data["IdRifa"]) ||
     !isset($data["Nombre"]) ||
     !isset($data["Telefono"]) ||
-    count($numbers) === 0
+    count($allNumbers) === 0
 ) {
     echo json_encode([
         "success" => false,
@@ -73,7 +134,7 @@ try{
         ]);
     }
 
-    $priceStmt = $pdo->prepare("SELECT PrecioBoleto FROM rifas WHERE IdRifa = :IdRifa LIMIT 1");
+    $priceStmt = $pdo->prepare("SELECT Nombre, PrecioBoleto FROM rifas WHERE IdRifa = :IdRifa LIMIT 1");
     $priceStmt->execute([
         ":IdRifa" => $data["IdRifa"]
     ]);
@@ -91,7 +152,7 @@ try{
     $checkStmt = $pdo->prepare("SELECT Numero FROM boletos WHERE IdRifa = :IdRifa AND Numero = :Numero LIMIT 1");
     $occupied = [];
 
-    foreach ($numbers as $number) {
+    foreach ($allNumbers as $number) {
         $checkStmt->execute([
             ":IdRifa" => $data["IdRifa"],
             ":Numero" => $number
@@ -122,7 +183,7 @@ try{
         ;
     ");
 
-    foreach ($numbers as $number) {
+    foreach ($allNumbers as $number) {
         $stmt1->execute([
             ":IdRifa" => $data["IdRifa"],
             ":Telefono" => $data["Telefono"],
@@ -133,9 +194,17 @@ try{
 
     $pdo->commit();
 
+    $emailSent = false;
+    try {
+        $emailSent = send_client_reservation_email($data, $paidNumbers, $freeNumbers, $raffle);
+    } catch (Throwable $mailError) {
+        $emailSent = false;
+    }
+
     echo json_encode([
         "success" => true,
-        "message" => "Boletos comprados"
+        "message" => "Boletos comprados",
+        "notificationEmailSent" => $emailSent
     ]);
 } catch(PDOException $e){
     if ($pdo->inTransaction()) {
