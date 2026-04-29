@@ -95,8 +95,17 @@ const CompraModal = ({onClose}: {
         setCurrentStep(3);
     };
 
-    const handlePay = ()=>{
+    const handlePay = async () => {
         setDisabled(true);
+
+        const whatsappWindow = window.open("about:blank", "_blank");
+        if (!whatsappWindow) {
+            toast.error("El navegador bloqueó la apertura de WhatsApp");
+            setDisabled(false);
+            return;
+        }
+        whatsappWindow.opener = null;
+
         const promise = buyTickets(
             raffle.data.IdRifa,
             customerData.nombre,
@@ -106,47 +115,50 @@ const CompraModal = ({onClose}: {
         );
 
         toast.promise(promise, {
-            loading: 'Comprando...',
-            success: 'Boletos por confirmar',
-            error: 'Error al comprar'
+            loading: "Comprando...",
+            success: "Boletos por confirmar",
+            error: "Error al comprar"
         });
 
-        promise
-            .then((data) => {
-                if (data.success) {
-                    const fechaApartado = new Date().toLocaleString("es-MX", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    });
+        try {
+            const data = await promise;
 
-                    const boletosPagados = paidSelectedTickets.length > 0
-                        ? paidSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
-                        : "Sin boletos";
-                    const boletosGratis = freeSelectedTickets.length > 0
-                        ? freeSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
-                        : "Sin boletos gratis";
+            if (data.success) {
+                const fechaApartado = new Date().toLocaleString("es-MX", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                });
 
-                    const message = whatsappTemplate
-                        .replace("{nombre}", customerData.nombre.trim())
-                        .replace("{telefono}", String(customerData.telefono))
-                        .replace("{nombre_rifa}", raffle.data.Nombre)
-                        .replace("{boletos_pagados}", boletosPagados)
-                        .replace("{boletos_gratis}", boletosGratis)
-                        .replace("{importe}", String(paidSelectedTickets.length * raffle.data.PrecioBoleto))
-                        .replace("{fecha}", fechaApartado);
+                const boletosPagados = paidSelectedTickets.length > 0
+                    ? paidSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                    : "Sin boletos";
+                const boletosGratis = freeSelectedTickets.length > 0
+                    ? freeSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                    : "Sin boletos gratis";
 
-                    const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-                    onClose();
-                }
-            })
-            .finally(() => {
-                setDisabled(false);
-            });
-    }
+                const message = whatsappTemplate
+                    .replace("{nombre}", customerData.nombre.trim())
+                    .replace("{telefono}", String(customerData.telefono))
+                    .replace("{nombre_rifa}", raffle.data.Nombre)
+                    .replace("{boletos_pagados}", boletosPagados)
+                    .replace("{boletos_gratis}", boletosGratis)
+                    .replace("{importe}", String(paidSelectedTickets.length * raffle.data.PrecioBoleto))
+                    .replace("{fecha}", fechaApartado);
+
+                whatsappWindow.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+                onClose();
+            } else {
+                whatsappWindow.close();
+            }
+        } catch {
+            whatsappWindow.close();
+        } finally {
+            setDisabled(false);
+        }
+    };
 
     const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
         const { name, value } = e.target;
@@ -488,7 +500,7 @@ const CompraModal = ({onClose}: {
                                     <CarouselNext className="right-2 text-black"/>
                                 </Carousel>
                             </div>
-                            <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/+528673096867">+52 86 7309 6867</a> junto con tu nombre y tus boletos pagados y gratis.</p>
+                            <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/528673096867">52 86 7309 6867</a> junto con tu nombre y tus boletos pagados y gratis.</p>
                         </div>
                         
                         <div className="flex justify-end flex-wrap gap-2 p-6">
