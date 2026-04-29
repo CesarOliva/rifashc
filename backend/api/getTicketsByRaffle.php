@@ -23,6 +23,7 @@ try {
         FROM boletos
         JOIN clientes ON boletos.IdCliente = clientes.IdCliente
         WHERE IdRifa = :IdRifa
+        ORDER BY IdBoleto DESC
     ");
 
     $stmt->execute([
