@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { toast } from "sonner";
 import { CreditCard } from "../ui/credit-card";
 import { buyTickets, getActiveRaffle, getTicketsByRaffle } from "../../services/api";
 import { formatearMoneda } from "../../services/currencyFormat";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/carousel";
+import whatsappTemplate from "../../../messageUser.txt?raw";
+
+const WHATSAPP_PHONE = "528673096867";
 
 interface Contacto {
     nombre: string;
@@ -35,10 +38,7 @@ const CompraModal = ({onClose}: {
         telefono: 0,
     });
 
-    const allSelectedTickets = useMemo(
-        () => [...paidSelectedTickets, ...freeSelectedTickets].sort((a, b) => a - b),
-        [paidSelectedTickets, freeSelectedTickets],
-    );
+    
 
     useEffect(()=>{
         const loadRaffle = async ()=> {
@@ -97,7 +97,13 @@ const CompraModal = ({onClose}: {
 
     const handlePay = ()=>{
         setDisabled(true);
-        const promise = buyTickets(raffle.data.IdRifa, customerData.nombre, customerData.telefono, allSelectedTickets);
+        const promise = buyTickets(
+            raffle.data.IdRifa,
+            customerData.nombre,
+            customerData.telefono,
+            paidSelectedTickets,
+            freeSelectedTickets
+        );
 
         toast.promise(promise, {
             loading: 'Comprando...',
@@ -108,6 +114,32 @@ const CompraModal = ({onClose}: {
         promise
             .then((data) => {
                 if (data.success) {
+                    const fechaApartado = new Date().toLocaleString("es-MX", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                    });
+
+                    const boletosPagados = paidSelectedTickets.length > 0
+                        ? paidSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                        : "Sin boletos";
+                    const boletosGratis = freeSelectedTickets.length > 0
+                        ? freeSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                        : "Sin boletos gratis";
+
+                    const message = whatsappTemplate
+                        .replace("{nombre}", customerData.nombre.trim())
+                        .replace("{telefono}", String(customerData.telefono))
+                        .replace("{nombre_rifa}", raffle.data.Nombre)
+                        .replace("{boletos_pagados}", boletosPagados)
+                        .replace("{boletos_gratis}", boletosGratis)
+                        .replace("{importe}", String(paidSelectedTickets.length * raffle.data.PrecioBoleto))
+                        .replace("{fecha}", fechaApartado);
+
+                    const whatsappUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
                     onClose();
                 }
             })
@@ -469,7 +501,7 @@ const CompraModal = ({onClose}: {
             </div>
 
             {showRandomResultModal && (
-                <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 z-60 bg-black/60 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
                     <div className="bg-white rounded-xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
                         {isGeneratingRandom ? (
                             <div className="flex flex-col items-center justify-center py-8">

@@ -1,0 +1,18 @@
+*RIFAS HC*
+
+Hola, soy {nombre}.
+Telefono: {telefono}
+
+*Rifa:*
+{nombre_rifa}
+
+*Boletos pagados:*
+{boletos_pagados}
+
+*Boletos gratis:*
+{boletos_gratis}
+
+*Importe a pagar:* ${importe}
+*Apartado:* {fecha}
+
+Comparto mis datos para confirmar mi compra. Enseguida envio mi comprobante de pago.

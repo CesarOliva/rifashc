@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { getRaffleById, getRaffleWinner, getTicketsByRaffle, removeRaffleWinner, removeTicket, startRaffle, updatePayed, updateRaffle } from "../services/api";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { getRaffleById, getRaffleWinner, getTicketsByRaffle, removeRaffleWinner, removeTicket, startRaffle, updatePayed, updatePayedBatch, updateRaffle } from "../services/api";
 import { parseDate } from "../services/parseDate";
 import ImageSelect, { type ImageSelectHandle } from "../components/admin/ImageSelect";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import { CircleCheck, X } from "lucide-react";
 import RemoveDialog from "../components/AlertDialog";
+import whatsappTemplate from "../../messageClient.txt?raw";
 
 const EditPage = () => {
     const {IdRifa} = useParams();
@@ -57,15 +58,52 @@ const EditPage = () => {
     const [tickets, setTickets] = useState<any[]>([]);
     const [paidTickets, setPaidTickets] = useState<number[]>([]);
     const [unpaidTickets, setUnpaidTickets] = useState<number[]>([]);
+    const [selectedTicketIds, setSelectedTicketIds] = useState<number[]>([]);
     const [winner, setWinner] = useState<any>(null);
     const [drawingWinner, setDrawingWinner] = useState<boolean>(false);
+    const [confirmingBatch, setConfirmingBatch] = useState<boolean>(false);
+
+    const selectedTickets = useMemo(
+        () => tickets.filter((ticket) => selectedTicketIds.includes(ticket.IdBoleto)),
+        [tickets, selectedTicketIds]
+    );
+
+    const normalizePhone = (value: string | number) => String(value).replace(/\D/g, "");
+
+    const formatRaffleDate = (raffleDate: string) => {
+        const parsedDate = parseDate(raffleDate);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return raffleDate || "";
+        }
+
+        return new Intl.DateTimeFormat("es-MX", {
+            dateStyle: "full",
+            timeStyle: "short"
+        }).format(parsedDate);
+    };
+
+    const buildConfirmationMessage = (ticketList: any[]) => {
+        const ticketNumbers = ticketList.map((ticket) => `#${ticket.Numero}`).join(", ");
+        const firstTicket = ticketList[0];
+
+        return whatsappTemplate
+            .replace("{nombre_rifa}", raffle?.Nombre ?? "")
+            .replace("{fecha_rifa}", formatRaffleDate(raffle?.Fecha ?? ""))
+            .replace("{nombre_cliente}", firstTicket?.Nombre ?? "")
+            .replace("{telefono}", normalizePhone(firstTicket?.Telefono ?? ""))
+            .replace("{boletos}", ticketNumbers || "Sin boletos");
+    };
+
+    const clearSelection = () => setSelectedTicketIds([]);
+
+    const isTicketPaid = (value: any) => value === true || value === 1 || value === '1';
 
     const syncTicketStatus = (ticketList: any[]) => {
         const paid: number[] = [];
         const unpaid: number[] = [];
 
         ticketList.forEach((ticket: any) => {
-            const isPaid = ticket.Pagado === true || ticket.Pagado === 1 || ticket.Pagado === '1';
+            const isPaid = isTicketPaid(ticket.Pagado);
             
             if (isPaid) {
                 paid.push(ticket.Numero);
@@ -121,6 +159,64 @@ const EditPage = () => {
             })
         }
     }
+
+    const toggleTicketSelection = (ticket: any) => {
+        if (isTicketPaid(ticket.Pagado)) {
+            return;
+        }
+
+        setSelectedTicketIds((current) =>
+            current.includes(ticket.IdBoleto)
+                ? current.filter((id) => id !== ticket.IdBoleto)
+                : [...current, ticket.IdBoleto]
+        );
+    };
+
+    const selectAllUnpaid = () => {
+        setSelectedTicketIds(
+            tickets
+                .filter((ticket) => !isTicketPaid(ticket.Pagado))
+                .map((ticket) => ticket.IdBoleto)
+        );
+    };
+
+    const handleBatchConfirm = async () => {
+        if (!raffle?.IdRifa) return;
+
+        if (selectedTickets.length === 0) {
+            toast.error("Selecciona al menos un boleto");
+            return;
+        }
+
+        const uniquePhones = Array.from(new Set(selectedTickets.map((ticket) => normalizePhone(ticket.Telefono)).filter(Boolean)));
+        if (uniquePhones.length !== 1) {
+            toast.error("Los boletos seleccionados deben pertenecer al mismo cliente");
+            return;
+        }
+
+        setConfirmingBatch(true);
+        const ticketIds = selectedTickets.map((ticket) => ticket.IdBoleto);
+        const promise = updatePayedBatch(ticketIds);
+
+        toast.promise(promise, {
+            loading: "Confirmando boletos...",
+            success: "Boletos confirmados con éxito",
+            error: "Fallo al confirmar los boletos"
+        });
+
+        try {
+            const data = await promise;
+            if (data?.success) {
+                const confirmationMessage = buildConfirmationMessage(selectedTickets);
+                const whatsappUrl = `https://wa.me/52${uniquePhones[0]}?text=${encodeURIComponent(confirmationMessage)}`;
+                window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+                clearSelection();
+                await loadTickets(raffle.IdRifa);
+            }
+        } finally {
+            setConfirmingBatch(false);
+        }
+    };
 
     const deleteTicket = async (IdBoleto: number) => {
         const promise = removeTicket(IdBoleto);
@@ -415,9 +511,40 @@ const EditPage = () => {
                     </div>
 
                     <div className="flex flex-col md:ml-6 gap-y-3 w-full max-h-120 overflow-auto">
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-neutral-900 p-3 text-white">
+                            <p className="text-sm text-neutral-300">
+                                Seleccionados: <span className="font-semibold text-white">{selectedTickets.length}</span>
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    type="button"
+                                    onClick={selectAllUnpaid}
+                                    className="bg-neutral-700 hover:bg-neutral-600 text-white px-3 py-2 rounded-lg cursor-pointer"
+                                >
+                                    Seleccionar pendientes
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={clearSelection}
+                                    className="bg-neutral-700 hover:bg-neutral-600 text-white px-3 py-2 rounded-lg cursor-pointer"
+                                >
+                                    Limpiar
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={confirmingBatch || selectedTickets.length === 0}
+                                    onClick={handleBatchConfirm}
+                                    className="bg-[#f6d061] hover:bg-[#f5c946] disabled:opacity-60 disabled:cursor-not-allowed font-semibold text-black px-4 py-2 rounded-lg cursor-pointer"
+                                >
+                                    {confirmingBatch ? "Confirmando..." : "Confirmar seleccionados"}
+                                </button>
+                            </div>
+                        </div>
+
                         <table className="min-w-full bg-neutral-800 rounded-lg text-left">
                             <thead>
                                 <tr>
+                                    <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Sel</th>
                                     <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Número</th>
                                     <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Comprador</th>
                                     <th className="py-2 px-4 border-b border-gray-300 text-gray-300">Teléfono</th>
@@ -428,12 +555,21 @@ const EditPage = () => {
                             <tbody>
                                 {tickets.map((ticket) => (
                                     <tr key={ticket.IdBoleto} className="">
+                                        <td className="py-2 px-4 border-b border-gray-300 text-gray-300">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedTicketIds.includes(ticket.IdBoleto)}
+                                                disabled={isTicketPaid(ticket.Pagado)}
+                                                onChange={() => toggleTicketSelection(ticket)}
+                                                className="size-4 cursor-pointer disabled:cursor-not-allowed"
+                                            />
+                                        </td>
                                         <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Numero}</td>
                                         <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Nombre}</td>
                                         <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Telefono}</td>
                                         <td className="py-2 px-4 border-b border-gray-300 text-black">
-                                            {ticket.Pagado ? (
-                                                <CircleCheck onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-green-100 rounded-full text-sm"/>
+                                            {isTicketPaid(ticket.Pagado) ? (
+                                                <CircleCheck className="bg-green-100 rounded-full text-sm"/>
                                             ): (
                                                 <X onClick={()=> updateActive(ticket.IdBoleto)} className="cursor-pointer bg-red-100 rounded-full text-sm"/>
                                             )}

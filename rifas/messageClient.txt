@@ -1,0 +1,18 @@
+*CONFIRMACIÓN DE BOLETOS PAGADOS*
+
+*Rifa:*
+{nombre_rifa}
+
+*Fecha de la rifa:*
+{fecha_rifa}
+
+*Cliente:*
+{nombre_cliente}
+
+*Telefono:*
+{telefono}
+
+*Boletos:*
+{boletos}
+
+*MUCHA SUERTE*

@@ -155,17 +155,25 @@ export const loginAdmin = async (usuario: string, password: string) => {
     return handleJsonResponse(res);
 };
 
-export const buyTickets = async (IdRifa: number, Nombre: string, Telefono: number, Numeros: number[]) => {
+export const buyTickets = async (
+    IdRifa: number,
+    Nombre: string,
+    Telefono: number,
+    NumerosPagados: number[],
+    NumerosGratis: number[] = []
+) => {
     const res = await fetch(`${API_URL}/buyTickets.php`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            IdRifa: IdRifa, 
+            IdRifa: IdRifa,
             Nombre: Nombre,
-            Telefono: Telefono, 
-            Numeros: Numeros
+            Telefono: Telefono,
+            NumerosPagados: NumerosPagados,
+            NumerosGratis: NumerosGratis,
+            Numeros: [...NumerosPagados, ...NumerosGratis]
         })
     });
 
@@ -212,6 +220,26 @@ export const updatePayed = async (id: number) => {
     }
     
     console.log(data)
+    return data;
+}
+
+export const updatePayedBatch = async (ids: number[]) => {
+    const res = await fetch(`${API_URL}/updatePayed.php`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify({
+            IdBoletos: ids
+        })
+    });
+
+    const data = await handleJsonResponse(res);
+    if (!data.success) {
+        throw new Error(data.message || 'Error al confirmar los boletos');
+    }
+
     return data;
 }
 
