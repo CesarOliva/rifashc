@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import CompraModal from "./compra";
-import { getActiveRaffle, getTicketsByRaffle } from "../../services/api";
+import { getActiveRaffle } from "../../services/api";
 import { parseDate } from "../../services/parseDate";
 import { CalendarX } from "lucide-react";
 
@@ -10,7 +10,6 @@ const Hero = () => {
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
-    const [soldTickets, setSoldTickets] = useState<number>(0);
 
     const [time, setTime] = useState({
         days:0,
@@ -27,11 +26,6 @@ const Hero = () => {
                     setError("No hay rifa activa");
                 } else {
                     setRaffle(data.data);
-
-                    const ticketsData = await getTicketsByRaffle(data.data.IdRifa);
-                    if (ticketsData.data && Array.isArray(ticketsData.data)) {
-                        setSoldTickets(ticketsData.data.length);
-                    }
                 }
             } catch(err){
                 setError("Error al conectar con el servidor");
@@ -111,11 +105,6 @@ const Hero = () => {
         )
     }
 
-    const totalTickets = Number(raffle.CantidadBoletos) || 0;
-    const soldPercentage = totalTickets > 0
-        ? Math.min(100, Math.round((soldTickets / totalTickets) * 100))
-        : 0;
-
     return (
         <>
             <div id="compra" className="w-full bg-linear-to-r from-[#ff0000] to-[#ff6a00] flex flex-col items-center py-8">
@@ -144,19 +133,6 @@ const Hero = () => {
                         </div>
                         <div className="bg-[#1f1f1f] p-4 rounded-lg text-center min-w-18">
                             <p className="text-lg font-semibold flex flex-col"><span className="text-2xl text-white">{time.seconds}</span> seg</p>
-                        </div>
-                    </div>
-
-                    <div className="max-w-xl mx-auto mt-2 px-4">
-                        <div className="flex justify-between text-sm text-white font-medium mb-1">
-                            <span>{soldPercentage}% vendido</span>
-                            <span>{soldTickets} de {totalTickets} boletos</span>
-                        </div>
-                        <div className="w-full h-3 rounded-full bg-white/30 overflow-hidden">
-                            <div
-                                className="h-full rounded-full bg-[#f6d061] transition-all duration-500"
-                                style={{ width: `${soldPercentage}%` }}
-                            />
                         </div>
                     </div>
 
