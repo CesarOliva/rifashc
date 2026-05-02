@@ -342,7 +342,7 @@ const CompraModal = ({onClose}: {
 
     return (
         <div onClick={onClose} className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl w-full max-w-150">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl w-full max-w-150  max-h-[90vh] overflow-auto">
                 {currentStep === 1 &&(
                     <>
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">

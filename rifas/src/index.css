@@ -20,3 +20,40 @@ body {
   box-sizing:border-box;
   min-height:100vh;
 }
+
+.hero-buy-btn {
+  animation: floatY 1.8s ease-in-out infinite;
+}
+
+.hero-buy-btn:hover {
+  animation-play-state: paused;
+  transform: translateY(0);
+}
+
+@keyframes floatY {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes shineSweep {
+  0% {
+    transform: translateX(0) skewX(-12deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  65% {
+    transform: translateX(280%) skewX(-12deg);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(280%) skewX(-12deg);
+    opacity: 0;
+  }
+}

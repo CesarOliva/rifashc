@@ -137,7 +137,18 @@ const Hero = () => {
                     </div>
 
                     <div className="flex max-w-60 mx-auto pt-4">
-                        <button onClick={() => setIsOpen(true)} className="bg-[#f6d061] text-lg font-semibold rounded-lg w-full text-black border-none p-3 cursor-pointer">Comprar boletos</button>
+                        <button
+                            onClick={() => setIsOpen(true)}
+                            className="hero-buy-btn group relative w-full overflow-hidden rounded-lg border-none bg-[#f6d061] p-3 text-lg font-semibold text-black shadow-[0_8px_22px_rgba(246,208,97,0.35)] transition-all duration-300 cursor-pointer hover:shadow-[0_14px_30px_rgba(246,208,97,0.5)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f6d061]/45"
+                        >
+                            <span
+                                className="absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-white/55 blur-sm"
+                                style={{ animation: "shineSweep 2.8s ease-in-out infinite" }}
+                            />
+                            <span className="relative inline-flex items-center justify-center gap-2">
+                                Comprar boletos
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
