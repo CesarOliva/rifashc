@@ -11,3 +11,8 @@ export const formatearMoneda = (cantidad: number) => {
         currency: 'MXN',
     }).format(cantidad);
 };
+
+export const formatTicketNumber = (numero: number | string) => {
+    const num = typeof numero === 'string' ? parseInt(numero, 10) : numero;
+    return String(num).padStart(5, '0');
+};

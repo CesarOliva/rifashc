@@ -26,6 +26,10 @@ function get_mail_from_header(): string {
     return sprintf("From: %s <%s>", $fromName, $fromEmail);
 }
 
+function format_ticket_number($number) {
+    return str_pad((int)$number, 5, '0', STR_PAD_LEFT);
+}
+
 function send_client_reservation_email(array $data, array $paidNumbers, array $freeNumbers, array $raffle): bool {
     if (!defined("CLIENT_NOTIFICATION_EMAIL")) {
         return false;
@@ -40,6 +44,9 @@ function send_client_reservation_email(array $data, array $paidNumbers, array $f
     $price = (float)($raffle["PrecioBoleto"] ?? 0);
     $total = $price * count($paidNumbers);
 
+    $formattedPaidNumbers = array_map('format_ticket_number', $paidNumbers);
+    $formattedFreeNumbers = array_map('format_ticket_number', $freeNumbers);
+
     $subject = sprintf("Apartado nuevo: %s", $raffleName);
     $body = implode("\n", [
         "Se registraron boletos apartados.",
@@ -47,8 +54,8 @@ function send_client_reservation_email(array $data, array $paidNumbers, array $f
         "Rifa: " . $raffleName,
         "Cliente comprador: " . $data["Nombre"],
         "Telefono comprador: " . $data["Telefono"],
-        "Boletos pagados: " . (count($paidNumbers) ? implode(", ", $paidNumbers) : "Ninguno"),
-        "Boletos gratis: " . (count($freeNumbers) ? implode(", ", $freeNumbers) : "Ninguno"),
+        "Boletos pagados: " . (count($formattedPaidNumbers) ? implode(", ", $formattedPaidNumbers) : "Ninguno"),
+        "Boletos gratis: " . (count($formattedFreeNumbers) ? implode(", ", $formattedFreeNumbers) : "Ninguno"),
         "Cantidad de boletos: " . (count($paidNumbers) + count($freeNumbers)),
         "Importe estimado: $" . number_format($total, 2, ".", ","),
         "Fecha: " . date("Y-m-d H:i:s"),

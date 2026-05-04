@@ -1,13 +1,27 @@
 import { CircleCheck, X } from "lucide-react";
 import RemoveDialog from "../AlertDialog";
 import { toast } from "sonner";
-
+import { formatTicketNumber } from "../../services/currencyFormat";
 import { getRaffleById, getRaffleWinner, getTicketsByRaffle, removeRaffleWinner, removeTicket, startRaffle, updatePayed, updatePayedBatch } from "../../services/api";
 import { useEffect, useMemo, useState } from "react";
 import { parseDate } from "../../services/parseDate";
 import { useParams } from "react-router";
 
 import whatsappTemplate from "../../../messageClient.txt?raw";
+
+const WHATSAPP_PHONE_PREFIX = "52";
+
+const isMobileDevice = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+const getWhatsAppUrl = (phone: string, message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+
+    if (isMobileDevice()) {
+        return `whatsapp://send?phone=${phone}&text=${encodedMessage}`;
+    }
+
+    return `https://wa.me/${phone}?text=${encodedMessage}`;
+};
 
 const SoldTickets = ({ total }: { total: number | null }) => {
     const {IdRifa} = useParams();
@@ -173,10 +187,15 @@ const SoldTickets = ({ total }: { total: number | null }) => {
             const data = await promise;
             if (data?.success) {
                 const confirmationMessage = buildConfirmationMessage(selectedTickets);
-                const whatsappUrl = `https://wa.me/52${uniquePhones[0]}?text=${encodeURIComponent(confirmationMessage)}`;
-                window.open(whatsappUrl, "_blank", "noopener,noreferrer");
                 clearSelection();
                 await loadTickets(raffle.IdRifa);
+
+                const whatsappUrl = getWhatsAppUrl(`${WHATSAPP_PHONE_PREFIX}${uniquePhones[0]}`, confirmationMessage);
+                if (isMobileDevice()) {
+                    window.location.href = whatsappUrl;
+                } else {
+                    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+                }
             }
         } finally {
             setConfirmingBatch(false);
@@ -240,7 +259,7 @@ const SoldTickets = ({ total }: { total: number | null }) => {
     }
 
     const buildConfirmationMessage = (ticketList: any[]) => {
-        const ticketNumbers = ticketList.map((ticket) => `#${ticket.Numero}`).join(", ");
+        const ticketNumbers = ticketList.map((ticket) => `#${formatTicketNumber(ticket.Numero)}`).join(", ");
         const firstTicket = ticketList[0];
 
         return whatsappTemplate
@@ -281,7 +300,7 @@ const SoldTickets = ({ total }: { total: number | null }) => {
                                 Volver a sortear
                             </button>
                         </div>
-                        <p className="text-white">Boleto: #{winner.Numero}</p>
+                        <p className="text-white">Boleto: #{formatTicketNumber(winner.Numero)}</p>
                         <p className="text-white">Nombre: {winner.Nombre}</p>
                         <p className="text-white">Teléfono: {winner.Telefono}</p>
                     </div>
@@ -301,7 +320,7 @@ const SoldTickets = ({ total }: { total: number | null }) => {
                                     }
                                 `}
                             >
-                                {num}
+                                {formatTicketNumber(num)}
                             </button>
                         ))}
                     </div>
@@ -361,7 +380,7 @@ const SoldTickets = ({ total }: { total: number | null }) => {
                                             className="size-4 cursor-pointer disabled:cursor-not-allowed"
                                         />
                                     </td>
-                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Numero}</td>
+                                    <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{formatTicketNumber(ticket.Numero)}</td>
                                     <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Nombre}</td>
                                     <td className="py-2 px-4 border-b border-gray-300 text-gray-300">{ticket.Telefono}</td>
                                     <td className="py-2 px-4 border-b border-gray-300 text-black">

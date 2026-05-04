@@ -1,18 +1,19 @@
 *RIFAS HC*
+*{nombre_rifa}*
 
-Hola, soy {nombre}.
-Telefono: {telefono}
+Hola! Soy {nombre}, mi número de teléfono es {telefono}
 
-*Rifa:*
-{nombre_rifa}
+*Apartado:* {fecha}
+*Importe a Pagar:* {importe}
 
-*Boletos pagados:*
+*Boletos:*
 {boletos_pagados}
-
-*Boletos gratis:*
+*Boletos de Regalo:*
 {boletos_gratis}
 
-*Importe a pagar:* ${importe}
-*Apartado:* {fecha}
+*Cuentas a depositar:*
+Ayvi Naomy Huerta, 4169 1606 2129 7382. Bancoppel
+Roberto Huerta Hinojosa, 5579 0890 0754 7493. Santander
 
-Comparto mis datos para confirmar mi compra. Enseguida envio mi comprobante de pago.
+Por favor envíanos tu comprobante pago vía WhatsApp 
+{RIFAS HC}

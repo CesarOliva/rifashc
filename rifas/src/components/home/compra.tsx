@@ -2,11 +2,22 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "r
 import { toast } from "sonner";
 import { CreditCard } from "../ui/credit-card";
 import { buyTickets, getActiveRaffle, getTicketsByRaffle } from "../../services/api";
-import { formatearMoneda } from "../../services/currencyFormat";
+import { formatearMoneda, formatTicketNumber } from "../../services/currencyFormat";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "../ui/carousel";
 import whatsappTemplate from "../../../messageUser.txt?raw";
 
 const WHATSAPP_PHONE = "528673096867";
+
+const getWhatsAppUrl = (message: string) => {
+    const encodedMessage = encodeURIComponent(message);
+    const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+
+    if (isMobileDevice) {
+        return `whatsapp://send?phone=${WHATSAPP_PHONE}&text=${encodedMessage}`;
+    }
+
+    return `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMessage}`;
+};
 
 interface Contacto {
     nombre: string;
@@ -98,14 +109,6 @@ const CompraModal = ({onClose}: {
     const handlePay = async () => {
         setDisabled(true);
 
-        const whatsappWindow = window.open("about:blank", "_blank");
-        if (!whatsappWindow) {
-            toast.error("El navegador bloqueó la apertura de WhatsApp");
-            setDisabled(false);
-            return;
-        }
-        whatsappWindow.opener = null;
-
         const promise = buyTickets(
             raffle.data.IdRifa,
             customerData.nombre,
@@ -133,10 +136,10 @@ const CompraModal = ({onClose}: {
                 });
 
                 const boletosPagados = paidSelectedTickets.length > 0
-                    ? paidSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                    ? paidSelectedTickets.map((ticket) => `#${formatTicketNumber(ticket)}`).join(", ")
                     : "Sin boletos";
                 const boletosGratis = freeSelectedTickets.length > 0
-                    ? freeSelectedTickets.map((ticket) => `#${ticket}`).join(", ")
+                    ? freeSelectedTickets.map((ticket) => `#${formatTicketNumber(ticket)}`).join(", ")
                     : "Sin boletos gratis";
 
                 const message = whatsappTemplate
@@ -146,15 +149,14 @@ const CompraModal = ({onClose}: {
                     .replace("{boletos_pagados}", boletosPagados)
                     .replace("{boletos_gratis}", boletosGratis)
                     .replace("{importe}", String(paidSelectedTickets.length * raffle.data.PrecioBoleto))
-                    .replace("{fecha}", fechaApartado);
+                    .replace("{fecha}", fechaApartado)
+                    .replace("{RIFAS HC}", "RIFAS HC");
 
-                whatsappWindow.location.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
+                window.location.href = getWhatsAppUrl(message);
                 onClose();
-            } else {
-                whatsappWindow.close();
             }
         } catch {
-            whatsappWindow.close();
+            toast.error("No se pudo abrir WhatsApp");
         } finally {
             setDisabled(false);
         }
@@ -342,7 +344,7 @@ const CompraModal = ({onClose}: {
 
     return (
         <div onClick={onClose} className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl w-full max-w-150  max-h-[90vh] overflow-auto">
+            <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-xl w-full max-w-200  max-h-[90vh] overflow-auto">
                 {currentStep === 1 &&(
                     <>
                         <div className="flex flex-col mb-4 bg-black p-6 rounded-t-xl">
@@ -354,7 +356,7 @@ const CompraModal = ({onClose}: {
                                 </p>
                             )}
                         </div>
-                        <div className="grid grid-cols-7 md:grid-cols-10 gap-2 p-6 max-h-[50vh] overflow-y-auto">
+                        <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-10 gap-2 p-6 max-h-[50vh] overflow-y-auto">
                             {Array.from({ length: raffle.data.CantidadBoletos }, (_, i) => i + 1).map((num) => (
                                 <button 
                                     key={num}
@@ -371,7 +373,7 @@ const CompraModal = ({onClose}: {
                                         }
                                     `}
                                 >
-                                    {num}
+                                    {formatTicketNumber(num)}
                                 </button>
                             ))}
                         </div>
@@ -482,7 +484,7 @@ const CompraModal = ({onClose}: {
                                         <div className="flex gap-1 flex-wrap">
                                         {paidSelectedTickets.map((ticket) => (
                                             <span key={ticket} className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                                #{ticket}
+                                                #{formatTicketNumber(ticket)}
                                             </span>
                                             ))}
                                         </div>
@@ -495,7 +497,7 @@ const CompraModal = ({onClose}: {
                                             {freeSelectedTickets.length > 0 ? (
                                                 freeSelectedTickets.map((ticket) => (
                                                     <span key={ticket} className="flex items-center bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-sm">
-                                                        #{ticket}
+                                                        #{formatTicketNumber(ticket)}
                                                     </span>
                                                 ))
                                             ) : (
@@ -529,12 +531,13 @@ const CompraModal = ({onClose}: {
                                 </Carousel>
                             </div>
                             <p className="text-sm text-gray-500 text-center">Realiza la transferencia por el monto total y envia el comprobante al <a className="text-blue-800" href="https://wa.me/528673096867">52 86 7309 6867</a> junto con tu nombre y tus boletos pagados y gratis.</p>
+                            <p className="text-sm text-gray-500 text-center">Si tienes dudas, contacta al <a className="text-red-800" href="https://wa.me/528673096867">52 86 7309 6867</a></p>
                         </div>
                         
                         <div className="flex justify-end flex-wrap gap-2 p-6">
                             <button onClick={onClose} className="bg-neutral-900 hover:bg-neutral-800 text-white px-4 py-2 rounded-lg cursor-pointer">Cancelar</button>
                             <button onClick={()=> setCurrentStep(2)} className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg cursor-pointer">Anterior</button>
-                            <button disabled={disabled} onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Listo</button>
+                            <button disabled={disabled} onClick={handlePay} className="bg-[#ff2a2a] text-white px-4 py-2 rounded-lg hover:bg-[#ff6a00] transition duration-300 cursor-pointer">Pagar</button>
                         </div>
                     </>
                 )}
