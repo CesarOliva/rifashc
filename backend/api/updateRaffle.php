@@ -33,7 +33,8 @@ try{
             Descripcion = :Descripcion,
             Fecha = :Fecha,
             PrecioBoleto = :PrecioBoleto,
-            CantidadBoletos = :CantidadBoletos
+            CantidadBoletos = :CantidadBoletos,
+            BoletosARegalar = :BoletosARegalar
         WHERE IdRifa = :IdRifa
     ");
 
@@ -45,6 +46,7 @@ try{
         ":Fecha" => $data["Fecha"],
         ":PrecioBoleto" => $data["PrecioBoleto"],
         ":CantidadBoletos" => $data["CantidadBoletos"],
+        ":BoletosARegalar" => $data["BoletosARegalar"] ?? 0,
     ]);
 
     $pdo->commit();

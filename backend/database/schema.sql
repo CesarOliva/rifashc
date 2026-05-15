@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS rifas (
     Fecha           DATETIME        NOT NULL,
     PrecioBoleto    REAL            NOT NULL,
     CantidadBoletos INT             NOT NULL,
+    BoletosARegalar INT             NOT NULL        DEFAULT 0,
     Activa          BOOLEAN         NOT NULL        DEFAULT TRUE
 );
 

@@ -34,8 +34,8 @@ try{
     $stmt->execute();
     
     $stmt2 = $pdo->prepare("
-    INSERT INTO rifas (Nombre, Imagen, Descripcion, Fecha, PrecioBoleto, CantidadBoletos)
-    VALUES (:Nombre, :Imagen, :Descripcion, :Fecha, :PrecioBoleto, :CantidadBoletos)
+    INSERT INTO rifas (Nombre, Imagen, Descripcion, Fecha, PrecioBoleto, CantidadBoletos, BoletosARegalar)
+    VALUES (:Nombre, :Imagen, :Descripcion, :Fecha, :PrecioBoleto, :CantidadBoletos, :BoletosARegalar)
     ");
 
     $stmt2->execute([
@@ -44,7 +44,8 @@ try{
         ":Descripcion" => $data["Descripcion"] ?? '',
         ":Fecha" => $data["Fecha"],
         ":PrecioBoleto" => $data["PrecioBoleto"],
-        ":CantidadBoletos" => $data["CantidadBoletos"]
+        ":CantidadBoletos" => $data["CantidadBoletos"],
+        ":BoletosARegalar" => $data["BoletosARegalar"] ?? 0
     ]);
 
     $pdo->commit();
