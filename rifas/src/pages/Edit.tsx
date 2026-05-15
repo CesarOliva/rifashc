@@ -38,6 +38,7 @@ const EditPage = () => {
     const [description, setDescription] = useState<string>('');
     const [price, setPrice] = useState<number | undefined>(undefined);
     const [amount, setAmount] = useState<number | undefined>(undefined);
+    const [giftAmount, setGiftAmount] = useState<number | undefined>(undefined);
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedTime, setSelectedTime] = useState<string>('');
     const imageSelectRef = useRef<ImageSelectHandle>(null);
@@ -62,6 +63,7 @@ const EditPage = () => {
             setDescription(raffle.Descripcion ?? '');
             setPrice(raffle.PrecioBoleto ?? undefined);
             setAmount(raffle.CantidadBoletos ?? undefined);
+            setGiftAmount(raffle.BoletosARegalar ?? undefined);
             if (raffle.Fecha) {
                 const date = parseDate(raffle.Fecha);
                 setSelectedDate(formatDateInput(date));
@@ -100,6 +102,14 @@ const EditPage = () => {
             toast.error('Cantidad requerida')
             return;
         }
+        if(giftAmount === undefined || giftAmount < 0){
+            toast.error('Cantidad de boletos a regalar requerida')
+            return;
+        }
+        if(giftAmount > amount){
+            toast.error('No puedes regalar más boletos de los disponibles')
+            return;
+        }
         if(selectedDate.trim() === ''){
             toast.error('Fecha requerida')
             return;
@@ -126,6 +136,7 @@ const EditPage = () => {
             Fecha: formatedDate,
             PrecioBoleto: price ? price : 0,
             CantidadBoletos: amount ? amount : 0,
+            BoletosARegalar: giftAmount ? giftAmount : 0,
         })
 
         toast.promise(promise, {
@@ -208,6 +219,15 @@ const EditPage = () => {
                             onChange={(e)=>setAmount(+e.target.value)}
                             className='text-2xl font-semibold text-[#f6d061] placeholder:text-neutral-300 focus:outline-none w-full max-w-100 rounded-md'
                             placeholder="Cantidad Boletos"
+                        />
+                        <input
+                            type="number"
+                            id="giftAmount"
+                            name="giftAmount"
+                            value={giftAmount ?? ''}
+                            onChange={(e)=>setGiftAmount(+e.target.value)}
+                            className='text-2xl font-semibold text-[#f6d061] placeholder:text-neutral-300 focus:outline-none w-full max-w-100 rounded-md'
+                            placeholder="Boletos a Regalar"
                         />
                         <div className="flex gap-2 flex-col md:flex-row">
                             <div className="bg-neutral-50 rounded-lg max-w-xs">

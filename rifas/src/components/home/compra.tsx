@@ -204,17 +204,25 @@ const CompraModal = ({onClose}: {
     };
 
     useEffect(() => {
-        if (!raffle?.data?.CantidadBoletos || paidSelectedTickets.length === 0) {
+        const freeTicketsToAssign = Number(raffle?.data?.BoletosARegalar ?? 0);
+
+        if (!raffle?.data?.CantidadBoletos || freeTicketsToAssign <= 0) {
             setFreeSelectedTickets([]);
             return;
         }
 
         const freePool = getAvailableTickets().filter((ticket) => !paidSelectedTickets.includes(ticket));
-        const freeCount = Math.min(paidSelectedTickets.length, freePool.length);
+        const freeCount = Math.min(freeTicketsToAssign, freePool.length);
+
+        if (freeCount <= 0) {
+            setFreeSelectedTickets([]);
+            return;
+        }
+
         const nextFreeTickets = getRandomSubset(freePool, freeCount);
 
         setFreeSelectedTickets(nextFreeTickets);
-    }, [paidSelectedTickets, purchasedTickets, raffle?.data?.CantidadBoletos]);
+    }, [paidSelectedTickets, purchasedTickets, raffle?.data?.CantidadBoletos, raffle?.data?.BoletosARegalar]);
 
     const openRandomInput = () => {
         const availableTickets = getAvailableTickets();

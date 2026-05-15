@@ -10,6 +10,7 @@ type RaffleProps = {
     Fecha: string;
     PrecioBoleto: number;
     CantidadBoletos: number;
+    BoletosARegalar?: number;
     Activa?: Boolean;
 }
 
@@ -48,6 +49,7 @@ export const createRaffle = async (raffle: RaffleProps) => {
             Fecha: raffle.Fecha,
             PrecioBoleto: raffle.PrecioBoleto,
             CantidadBoletos: raffle.CantidadBoletos,
+            BoletosARegalar: raffle.BoletosARegalar ?? 0,
         })
     });
 
@@ -90,6 +92,7 @@ export const updateRaffle = async (raffle: RaffleProps) => {
             Fecha: raffle.Fecha,
             PrecioBoleto: raffle.PrecioBoleto,
             CantidadBoletos: raffle.CantidadBoletos,
+            BoletosARegalar: raffle.BoletosARegalar ?? 0,
         })
     });
 
