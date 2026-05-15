@@ -204,7 +204,7 @@ const CompraModal = ({onClose}: {
     };
 
     useEffect(() => {
-        const freeTicketsToAssign = Number(raffle?.data?.BoletosARegalar ?? 0);
+        const freeTicketsToAssign = Number(raffle?.data?.BoletosARegalar * paidSelectedTickets.length || 0);
 
         if (!raffle?.data?.CantidadBoletos || freeTicketsToAssign <= 0) {
             setFreeSelectedTickets([]);
